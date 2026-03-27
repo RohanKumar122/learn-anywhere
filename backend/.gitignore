@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv
+venv/
+ENV/
+
+# Environment variables
+.env
+
+# Database
+*.sqlite3
+
+# OS related
+.DS_Store
+Thumbs.db
