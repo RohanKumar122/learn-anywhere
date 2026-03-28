@@ -67,12 +67,7 @@ def get_feed(current_user):
     user = db.users.find_one({"_id": ObjectId(current_user["id"])})
     read_ids = user.get("reading_history", [])
     
-    query = {
-        "$or": [
-            {"owner_id": current_user["id"]},
-            {"is_public": True}
-        ]
-    }
+    query = {"owner_id": current_user["id"]}
     if category:
         query["category"] = category
     if difficulty:
