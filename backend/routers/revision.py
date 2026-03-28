@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends
+from flask import Blueprint, request, jsonify, abort
 from database import get_db
-from auth_utils import get_current_user
+from auth_utils import login_required
 from bson import ObjectId
 from datetime import datetime, timedelta
 
-router = APIRouter()
+revision_bp = Blueprint('revision', __name__)
 
 def serialize_doc(doc):
     doc["id"] = str(doc["_id"])
@@ -29,11 +29,12 @@ def calculate_next_interval(repetitions: int, quality: int, interval: int) -> tu
     
     return new_interval, repetitions + 1
 
-@router.get("/due")
-async def get_due_revisions(current_user=Depends(get_current_user)):
+@revision_bp.route("/due", methods=["GET"])
+@login_required
+def get_due_revisions(current_user):
     """Get all docs due for revision today"""
     db = get_db()
-    user = await db.users.find_one({"_id": ObjectId(current_user["id"])})
+    user = db.users.find_one({"_id": ObjectId(current_user["id"])})
     revision_queue = user.get("revision_queue", [])
     
     now = datetime.utcnow()
@@ -45,7 +46,7 @@ async def get_due_revisions(current_user=Depends(get_current_user)):
             if next_rev <= now:
                 # Fetch the doc
                 try:
-                    doc = await db.docs.find_one({"_id": ObjectId(item["doc_id"])})
+                    doc = db.docs.find_one({"_id": ObjectId(item["doc_id"])})
                     if doc:
                         serialized = serialize_doc(doc)
                         serialized["revision_meta"] = {
@@ -79,23 +80,26 @@ async def get_due_revisions(current_user=Depends(get_current_user)):
             except:
                 pass
     
-    return {
+    return jsonify({
         "due": due_items,
         "due_count": len(due_items),
         "forgotten_count": len(forgotten),
         "forgotten": forgotten[:5]  # Top 5 forgotten
-    }
+    })
 
-@router.post("/{doc_id}/complete")
-async def complete_revision(doc_id: str, quality: int = 4, current_user=Depends(get_current_user)):
+@revision_bp.route("/<doc_id>/complete", methods=["POST"])
+@login_required
+def complete_revision(current_user, doc_id):
     """
     quality: 0=forgot, 3=hard, 4=good, 5=easy
     """
     db = get_db()
-    user = await db.users.find_one({"_id": ObjectId(current_user["id"])})
+    quality = int(request.args.get("quality", 4))
+    user = db.users.find_one({"_id": ObjectId(current_user["id"])})
     revision_queue = user.get("revision_queue", [])
     
     updated_queue = []
+    new_interval = 1
     for item in revision_queue:
         if item["doc_id"] == doc_id:
             new_interval, new_reps = calculate_next_interval(
@@ -110,34 +114,36 @@ async def complete_revision(doc_id: str, quality: int = 4, current_user=Depends(
             item["last_reviewed"] = datetime.utcnow().isoformat()
         updated_queue.append(item)
     
-    await db.users.update_one(
+    db.users.update_one(
         {"_id": ObjectId(current_user["id"])},
         {"$set": {"revision_queue": updated_queue}}
     )
-    return {"message": "Revision recorded", "next_review_days": new_interval if 'new_interval' in dir() else 1}
+    return jsonify({"message": "Revision recorded", "next_review_days": new_interval})
 
-@router.delete("/{doc_id}")
-async def remove_from_revision(doc_id: str, current_user=Depends(get_current_user)):
+@revision_bp.route("/<doc_id>", methods=["DELETE"])
+@login_required
+def remove_from_revision(current_user, doc_id):
     db = get_db()
-    await db.users.update_one(
+    db.users.update_one(
         {"_id": ObjectId(current_user["id"])},
         {"$pull": {"revision_queue": {"doc_id": doc_id}}}
     )
-    return {"message": "Removed from revision"}
+    return jsonify({"message": "Removed from revision"})
 
-@router.get("/stats")
-async def get_revision_stats(current_user=Depends(get_current_user)):
+@revision_bp.route("/stats", methods=["GET"])
+@login_required
+def get_revision_stats(current_user):
     db = get_db()
-    user = await db.users.find_one({"_id": ObjectId(current_user["id"])})
+    user = db.users.find_one({"_id": ObjectId(current_user["id"])})
     
     revision_queue = user.get("revision_queue", [])
     reading_history = user.get("reading_history", [])
     
-    total_docs = await db.docs.count_documents({"owner_id": current_user["id"]})
+    total_docs = db.docs.count_documents({"owner_id": current_user["id"]})
     
-    return {
+    return jsonify({
         "total_docs": total_docs,
         "in_revision": len(revision_queue),
         "docs_read": len(reading_history),
         "streak_days": 0,  # TODO: implement streak tracking
-    }
+    })

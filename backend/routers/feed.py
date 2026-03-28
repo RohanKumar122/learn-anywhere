@@ -1,26 +1,26 @@
-from fastapi import APIRouter, Depends, Query
-from typing import Optional
+from flask import Blueprint, request, jsonify, abort
 from database import get_db
-from auth_utils import get_current_user
+from auth_utils import login_required
 from bson import ObjectId
+from datetime import datetime
 
-router = APIRouter()
+feed_bp = Blueprint('feed', __name__)
 
 def serialize_doc(doc):
     doc["id"] = str(doc["_id"])
     del doc["_id"]
     return doc
 
-@router.get("/")
-async def get_feed(
-    category: Optional[str] = None,
-    difficulty: Optional[str] = None,
-    page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=30),
-    current_user=Depends(get_current_user)
-):
+@feed_bp.route("/", methods=["GET"])
+@login_required
+def get_feed(current_user):
     db = get_db()
-    user = await db.users.find_one({"_id": ObjectId(current_user["id"])})
+    category = request.args.get("category")
+    difficulty = request.args.get("difficulty")
+    page = int(request.args.get("page", 1))
+    limit = int(request.args.get("limit", 10))
+    
+    user = db.users.find_one({"_id": ObjectId(current_user["id"])})
     read_ids = user.get("reading_history", [])
     
     query = {
@@ -49,7 +49,7 @@ async def get_feed(
             unread_query["_id"] = {"$nin": object_ids}
     
     cursor = db.docs.find(unread_query).sort("created_at", -1).skip(skip).limit(limit)
-    docs = await cursor.to_list(length=limit)
+    docs = list(cursor)
     
     # If not enough unread, pad with read docs
     if len(docs) < limit:
@@ -58,10 +58,10 @@ async def get_feed(
             **query,
             "_id": {"$nin": [ObjectId(d["_id"]) for d in docs]}
         }).sort("created_at", -1).limit(remaining)
-        read_docs = await read_cursor.to_list(length=remaining)
+        read_docs = list(read_cursor)
         docs.extend(read_docs)
     
-    total = await db.docs.count_documents(query)
+    total = db.docs.count_documents(query)
     bookmark_ids = user.get("bookmarks", [])
     
     result = []
@@ -71,16 +71,17 @@ async def get_feed(
         serialized["is_read"] = serialized["id"] in read_ids
         result.append(serialized)
     
-    return {
+    return jsonify({
         "feed": result,
         "total": total,
         "page": page,
         "has_more": (page * limit) < total
-    }
+    })
 
-@router.get("/categories")
-async def get_categories(current_user=Depends(get_current_user)):
-    return {
+@feed_bp.route("/categories", methods=["GET"])
+@login_required
+def get_categories(current_user):
+    return jsonify({
         "categories": ["DSA", "System Design", "OS", "DBMS", "CN", "Other"],
         "difficulties": ["Easy", "Medium", "Hard"],
         "popular_tags": [
@@ -88,25 +89,25 @@ async def get_categories(current_user=Depends(get_current_user)):
             "binary-search", "recursion", "caching", "load-balancing",
             "microservices", "databases", "networking", "processes"
         ]
-    }
+    })
 
-@router.post("/{id}/mark-read")
-async def mark_as_read(id: str, current_user=Depends(get_current_user)):
+@feed_bp.route("/<id>/mark-read", methods=["POST"])
+@login_required
+def mark_as_read(current_user, id):
     db = get_db()
-    from datetime import datetime
-    await db.users.update_one(
+    db.users.update_one(
         {"_id": ObjectId(current_user["id"])},
         {
             "$addToSet": {"reading_history": id},
             "$set": {f"last_read.{id}": datetime.utcnow()}
         }
     )
-    return {"message": "Marked as read"}
+    return jsonify({"message": "Marked as read"})
 
-@router.post("/{id}/add-to-revision")
-async def add_to_revision(id: str, current_user=Depends(get_current_user)):
+@feed_bp.route("/<id>/add-to-revision", methods=["POST"])
+@login_required
+def add_to_revision(current_user, id):
     db = get_db()
-    from datetime import datetime
     entry = {
         "doc_id": id,
         "added_at": datetime.utcnow().isoformat(),
@@ -114,8 +115,8 @@ async def add_to_revision(id: str, current_user=Depends(get_current_user)):
         "interval_days": 1,
         "repetitions": 0
     }
-    await db.users.update_one(
+    db.users.update_one(
         {"_id": ObjectId(current_user["id"])},
         {"$addToSet": {"revision_queue": entry}}
     )
-    return {"message": "Added to revision queue"}
+    return jsonify({"message": "Added to revision queue"})

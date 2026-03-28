@@ -1,24 +1,20 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 from config import settings
 
-client: AsyncIOMotorClient = None
+client: MongoClient = None
 db = None
-
-async def connect_db():
-    global client, db
-    client = AsyncIOMotorClient(settings.MONGODB_URL)
-    db = client[settings.DB_NAME]
-    print(f"✅ Connected to MongoDB: {settings.DB_NAME}")
-
-async def disconnect_db():
-    global client
-    if client:
-        client.close()
-        print("❌ Disconnected from MongoDB")
 
 def get_db():
     global client, db
     if db is None:
-        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        client = MongoClient(settings.MONGODB_URL)
         db = client[settings.DB_NAME]
     return db
+
+def connect_db():
+    get_db()
+
+def disconnect_db():
+    global client
+    if client:
+        client.close()

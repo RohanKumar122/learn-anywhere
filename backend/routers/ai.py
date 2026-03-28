@@ -1,33 +1,14 @@
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel
-from typing import Optional, List
+from flask import Blueprint, request, jsonify, abort
 from datetime import datetime
 from database import get_db
-from auth_utils import get_current_user
+from auth_utils import login_required
 from config import settings
 import httpx
 import json
 
-router = APIRouter()
+ai_bp = Blueprint('ai', __name__)
 
-class ChatMessage(BaseModel):
-    role: str  # user | assistant
-    content: str
-
-class AskRequest(BaseModel):
-    question: str
-    history: Optional[List[ChatMessage]] = []
-    context_doc_id: Optional[str] = None  # for asking about a specific doc
-    model_choice: Optional[str] = "gemini"  # gemini | openai
-
-class SaveAsDocRequest(BaseModel):
-    title: str
-    content: str  # markdown from AI answer
-    category: str = "Other"
-    tags: List[str] = []
-    difficulty: str = "Medium"
-
-async def call_gemini(prompt: str, history: List[dict] = []) -> str:
+def call_gemini(prompt: str, history: list = []) -> str:
     if not settings.GEMINI_API_KEY:
         return "⚠️ Gemini API key not configured. Add GEMINI_API_KEY to your .env file."
     
@@ -60,14 +41,14 @@ Format your response in clean Markdown."""
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}
     }
     
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(url, json=payload)
+    with httpx.Client(timeout=30) as client:
+        resp = client.post(url, json=payload)
         if resp.status_code != 200:
-            raise HTTPException(status_code=502, detail=f"Gemini API error: {resp.text}")
+            abort(502, description=f"Gemini API error: {resp.text}")
         data = resp.json()
         return data["candidates"][0]["content"]["parts"][0]["text"]
 
-async def call_openai(prompt: str, history: List[dict] = []) -> str:
+def call_openai(prompt: str, history: list = []) -> str:
     if not settings.OPENAI_API_KEY:
         return "⚠️ OpenAI API key not configured. Add OPENAI_API_KEY to your .env file."
     
@@ -78,67 +59,70 @@ async def call_openai(prompt: str, history: List[dict] = []) -> str:
         messages.append({"role": msg["role"], "content": msg["content"]})
     messages.append({"role": "user", "content": prompt})
     
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.post(
+    with httpx.Client(timeout=30) as client:
+        resp = client.post(
             "https://api.openai.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
             json={"model": "gpt-3.5-turbo", "messages": messages, "max_tokens": 2048}
         )
         if resp.status_code != 200:
-            raise HTTPException(status_code=502, detail=f"OpenAI error: {resp.text}")
+            abort(502, description=f"OpenAI error: {resp.text}")
         return resp.json()["choices"][0]["message"]["content"]
 
-@router.post("/ask")
-async def ask_ai(data: AskRequest, current_user=Depends(get_current_user)):
+@ai_bp.route("/ask", methods=["POST"])
+@login_required
+def ask_ai(current_user):
+    data = request.json
     db = get_db()
-    history = [{"role": m.role, "content": m.content} for m in data.history]
+    history = data.get("history", [])
     
-    # Select provider based on choice or availability
-    provider = data.model_choice.lower() if data.model_choice else "gemini"
+    provider = data.get("model_choice", "gemini").lower()
     
     if provider == "openai" and settings.OPENAI_API_KEY:
-        answer = await call_openai(data.question, history)
+        answer = call_openai(data.get("question"), history)
         provider = "openai"
     elif settings.GEMINI_API_KEY:
-        answer = await call_gemini(data.question, history)
+        answer = call_gemini(data.get("question"), history)
         provider = "gemini"
     elif settings.OPENAI_API_KEY:
-        answer = await call_openai(data.question, history)
+        answer = call_openai(data.get("question"), history)
         provider = "openai"
     else:
-        answer = generate_fallback_answer(data.question)
+        answer = generate_fallback_answer(data.get("question"))
         provider = "fallback"
     
-    # Save chat to DB
     chat_entry = {
         "user_id": current_user["id"],
-        "question": data.question,
+        "question": data.get("question"),
         "answer": answer,
         "provider": provider,
         "created_at": datetime.utcnow(),
         "saved_as_doc": False
     }
-    result = await db.chats.insert_one(chat_entry)
+    result = db.chats.insert_one(chat_entry)
     
-    return {
+    return jsonify({
         "answer": answer,
         "chat_id": str(result.inserted_id),
         "provider": provider
-    }
+    })
 
-@router.post("/save-as-doc")
-async def save_ai_answer_as_doc(data: SaveAsDocRequest, current_user=Depends(get_current_user)):
+@ai_bp.route("/save-as-doc", methods=["POST"])
+@login_required
+def save_ai_answer_as_doc(current_user):
+    data = request.json
     db = get_db()
-    word_count = len(data.content.split())
+    content = data.get("content", "")
+    word_count = len(content.split())
     read_time = max(1, word_count // 200)
     
     doc = {
-        "title": data.title,
-        "content": data.content,
-        "summary": data.content[:200] + "..." if len(data.content) > 200 else data.content,
-        "category": data.category,
-        "tags": data.tags,
-        "difficulty": data.difficulty,
+        "title": data.get("title"),
+        "content": content,
+        "summary": content[:200] + "..." if len(content) > 200 else content,
+        "category": data.get("category", "Other"),
+        "tags": data.get("tags", []),
+        "difficulty": data.get("difficulty", "Medium"),
         "is_ai_generated": True,
         "is_public": False,
         "owner_id": current_user["id"],
@@ -150,26 +134,28 @@ async def save_ai_answer_as_doc(data: SaveAsDocRequest, current_user=Depends(get
         "personal_notes": [],
         "is_published": True,
     }
-    result = await db.docs.insert_one(doc)
-    return {"doc_id": str(result.inserted_id), "message": "Saved as doc!"}
+    result = db.docs.insert_one(doc)
+    return jsonify({"doc_id": str(result.inserted_id), "message": "Saved as doc!"})
 
-@router.get("/chats")
-async def get_chat_history(current_user=Depends(get_current_user)):
+@ai_bp.route("/chats", methods=["GET"])
+@login_required
+def get_chat_history(current_user):
     db = get_db()
     cursor = db.chats.find({"user_id": current_user["id"]}).sort("created_at", -1).limit(50)
-    chats = await cursor.to_list(length=50)
+    chats = list(cursor)
     for c in chats:
         c["id"] = str(c["_id"])
         del c["_id"]
-    return {"chats": chats}
+    return jsonify({"chats": chats})
 
-@router.post("/generate-quiz/{doc_id}")
-async def generate_quiz(doc_id: str, current_user=Depends(get_current_user)):
+@ai_bp.route("/generate-quiz/<doc_id>", methods=["POST"])
+@login_required
+def generate_quiz(current_user, doc_id):
     db = get_db()
     from bson import ObjectId
-    doc = await db.docs.find_one({"_id": ObjectId(doc_id)})
+    doc = db.docs.find_one({"_id": ObjectId(doc_id)})
     if not doc:
-        raise HTTPException(status_code=404, detail="Doc not found")
+        abort(404, description="Doc not found")
     
     prompt = f"""Based on this document, generate 5 multiple choice quiz questions in JSON format:
 
@@ -187,13 +173,12 @@ Return ONLY valid JSON array like:
 ]"""
     
     if settings.GEMINI_API_KEY:
-        raw = await call_gemini(prompt)
+        raw = call_gemini(prompt)
     elif settings.OPENAI_API_KEY:
-        raw = await call_openai(prompt)
+        raw = call_openai(prompt)
     else:
-        return {"quiz": get_sample_quiz()}
+        return jsonify({"quiz": get_sample_quiz()})
     
-    # Extract JSON from response
     try:
         start = raw.find("[")
         end = raw.rfind("]") + 1
@@ -201,15 +186,16 @@ Return ONLY valid JSON array like:
     except:
         quiz = get_sample_quiz()
     
-    return {"quiz": quiz}
+    return jsonify({"quiz": quiz})
 
-@router.post("/generate-flashcards/{doc_id}")
-async def generate_flashcards(doc_id: str, current_user=Depends(get_current_user)):
+@ai_bp.route("/generate-flashcards/<doc_id>", methods=["POST"])
+@login_required
+def generate_flashcards(current_user, doc_id):
     db = get_db()
     from bson import ObjectId
-    doc = await db.docs.find_one({"_id": ObjectId(doc_id)})
+    doc = db.docs.find_one({"_id": ObjectId(doc_id)})
     if not doc:
-        raise HTTPException(status_code=404, detail="Doc not found")
+        abort(404, description="Doc not found")
     
     prompt = f"""Create 5 flashcards from this document as JSON:
 
@@ -220,11 +206,11 @@ Return ONLY valid JSON array:
 [{{"front": "concept/question", "back": "explanation/answer"}}]"""
     
     if settings.GEMINI_API_KEY:
-        raw = await call_gemini(prompt)
+        raw = call_gemini(prompt)
     elif settings.OPENAI_API_KEY:
-        raw = await call_openai(prompt)
+        raw = call_openai(prompt)
     else:
-        return {"flashcards": [{"front": "What is the concept?", "back": "See the doc for details."}]}
+        return jsonify({"flashcards": [{"front": "What is the concept?", "back": "See the doc for details."}]})
     
     try:
         start = raw.find("[")
@@ -233,7 +219,7 @@ Return ONLY valid JSON array:
     except:
         cards = [{"front": "Review needed", "back": "Could not parse flashcards"}]
     
-    return {"flashcards": cards}
+    return jsonify({"flashcards": cards})
 
 def generate_fallback_answer(question: str) -> str:
     return f"""## Answer (Demo Mode)

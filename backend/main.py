@@ -1,37 +1,35 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, docs, feed, ai, revision, search
-from database import connect_db, disconnect_db
+from flask import Flask, jsonify
+from flask_cors import CORS
+from routers.auth import auth_bp
+from routers.docs import docs_bp
+from routers.feed import feed_bp
+from routers.ai import ai_bp
+from routers.revision import revision_bp
+from routers.search import search_bp
+from database import connect_db
 
-app = FastAPI(title="ConceptFlow AI", version="1.0.0")
+app = Flask(__name__)
+# Enable CORS for All Origins (similar to current FastAPI config)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], # Allow all origins in production/dev for now to avoid CORS issues on Vercel
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Register Blueprints
+app.register_blueprint(auth_bp, url_prefix="/api/auth")
+app.register_blueprint(docs_bp, url_prefix="/api/docs")
+app.register_blueprint(feed_bp, url_prefix="/api/feed")
+app.register_blueprint(ai_bp, url_prefix="/api/ai")
+app.register_blueprint(revision_bp, url_prefix="/api/revision")
+app.register_blueprint(search_bp, url_prefix="/api/search")
 
-@app.on_event("startup")
-async def startup():
-    await connect_db()
+@app.route("/api/health")
+def health():
+    return jsonify({"status": "ok", "message": "Flask Backend reached!"})
 
-@app.on_event("shutdown")
-async def shutdown():
-    await disconnect_db()
+@app.route("/")
+def root():
+    return jsonify({"message": "ConceptFlow AI Flask API running"})
 
-app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
-app.include_router(docs.router, prefix="/api/docs", tags=["Docs"])
-app.include_router(feed.router, prefix="/api/feed", tags=["Feed"])
-app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
-app.include_router(revision.router, prefix="/api/revision", tags=["Revision"])
-app.include_router(search.router, prefix="/api/search", tags=["Search"])
+# Connect to DB once at module level (Flask idiomatic or via context)
+connect_db()
 
-@app.get("/api/health") 
-async def health():
-    return {"status": "ok", "message": "Backend reached!"}
-
-@app.get("/")
-async def root():
-    return {"message": "ConceptFlow AI API running"}
+if __name__ == "__main__":
+    app.run(port=3000, debug=True)

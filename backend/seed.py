@@ -2,9 +2,10 @@
 Run: python seed.py
 Seeds the database with sample DSA and System Design content
 """
-import asyncio
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 from datetime import datetime
+import hashlib
+from passlib.context import CryptContext
 
 MONGODB_URL = "mongodb://localhost:27017"
 DB_NAME = "conceptflow"
@@ -128,8 +129,8 @@ def search_rotated(nums, target):
 
 ```
 Client → API Gateway → App Server → DB
-                              ↓
-                           Cache (Redis)
+                               ↓
+                            Cache (Redis)
 ```
 
 ## The Core Problem: URL Encoding
@@ -293,175 +294,27 @@ def knapsack_optimized(weights, values, W, n):
 **Related Problems:** Subset Sum, Partition Equal Subset Sum (LC 416), Target Sum (LC 494)
 """,
     },
-    {
-        "title": "Redis vs Kafka — When To Use What",
-        "category": "System Design",
-        "difficulty": "Medium",
-        "tags": ["redis", "kafka", "caching", "messaging", "system-design"],
-        "read_time_minutes": 6,
-        "summary": "Clear comparison of Redis and Kafka with real-world use cases, interview-ready answers.",
-        "content": """# Redis vs Kafka — When To Use What
-
-## The One-Line Summary
-
-| | Redis | Kafka |
-|--|-------|-------|
-| **Type** | In-memory data store + cache | Distributed event streaming |
-| **Use for** | Fast reads, caching, sessions | Event pipelines, async processing |
-| **Analogy** | A whiteboard (fast, temporary) | A conveyor belt (ordered, durable) |
-
-## Redis Deep Dive
-
-### What Is It?
-Redis = **RE**mote **DI**ctionary **S**erver. Stores data in memory with optional persistence.
-
-### Core Data Structures
-```
-String:  SET user:1:name "Rohan"
-Hash:    HSET user:1 name "Rohan" age 25
-List:    LPUSH notifications "msg1" "msg2"
-Set:     SADD online_users "user:1"
-ZSet:    ZADD leaderboard 1500 "user:1"  ← Sorted!
-```
-
-### When To Use Redis
-✅ Session storage (JWT token cache)  
-✅ Rate limiting (sliding window counter)  
-✅ Leaderboards (sorted sets)  
-✅ Pub/Sub for real-time notifications  
-✅ Cache for DB queries  
-✅ Distributed locks  
-
-### Limitation
-❌ Data is lost on crash (unless persistence configured)  
-❌ Not designed for high-throughput event streaming  
-
-## Kafka Deep Dive
-
-### What Is It?
-Kafka = distributed **commit log**. Producers write events; consumers read at their own pace.
-
-```
-Producer → [Topic: orders] → Consumer Group A (payment service)
-                           → Consumer Group B (inventory service)
-                           → Consumer Group C (analytics)
-```
-
-### Why Kafka Is Special
-- **Retention**: Messages stored for days/weeks (replay!)
-- **Throughput**: Millions of messages/second
-- **Ordering**: Guaranteed within a partition
-- **Fault tolerant**: Replication across brokers
-
-### When To Use Kafka
-✅ Event sourcing (audit trail)  
-✅ Microservices communication (decoupled)  
-✅ Real-time analytics pipeline  
-✅ CDC (Change Data Capture from DB)  
-✅ Log aggregation  
-
-### Limitation
-❌ Overkill for simple caching  
-❌ Higher operational complexity  
-
-## Interview Answer Template
-
-> *"Redis is my go-to for caching, session management, and anything requiring sub-millisecond reads. Kafka is for event-driven architectures where I need reliable, ordered, replayable message delivery between services. In a ride-sharing app, I'd use Redis to cache driver locations (high read, low latency) and Kafka to stream ride events to billing, notifications, and analytics services."*
-
-## Key Takeaway
-> **Redis = Speed + Simplicity. Kafka = Scale + Reliability.**  
-> They complement each other — many systems use both.
-""",
-    },
-    {
-        "title": "OS: Processes vs Threads",
-        "category": "OS",
-        "difficulty": "Easy",
-        "tags": ["os", "processes", "threads", "concurrency"],
-        "read_time_minutes": 4,
-        "summary": "Clear explanation of processes vs threads with diagrams and interview-ready answers.",
-        "content": """# OS: Processes vs Threads
-
-## Process
-A **process** is a running program with its own isolated memory space.
-
-```
-Process A                Process B
-┌──────────────┐         ┌──────────────┐
-│ Code Segment │         │ Code Segment │
-│ Data Segment │         │ Data Segment │
-│ Heap         │         │ Heap         │
-│ Stack        │         │ Stack        │
-│ File handles │         │ File handles │
-└──────────────┘         └──────────────┘
-   Isolated!                Isolated!
-```
-
-## Thread
-A **thread** is a lightweight unit of execution within a process. Threads **share** memory.
-
-```
-Process
-┌─────────────────────────────┐
-│ Code Segment (shared)       │
-│ Data Segment (shared)       │
-│ Heap (shared)               │
-│ ┌──────┐ ┌──────┐ ┌──────┐ │
-│ │Stack1│ │Stack2│ │Stack3│ │ ← Each thread has own stack
-│ └──────┘ └──────┘ └──────┘ │
-└─────────────────────────────┘
-```
-
-## Key Differences
-
-| | Process | Thread |
-|--|---------|--------|
-| Memory | Separate | Shared |
-| Creation | Slow (fork) | Fast |
-| Communication | IPC needed | Shared memory |
-| Crash impact | Isolated | Kills all threads |
-| Context switch | Expensive | Cheap |
-
-## Real World Example
-
-**Web Browser:**
-- Each tab = separate **process** (crash isolation)
-- Each tab has multiple **threads** (rendering, JS engine, network)
-
-**Web Server (Node.js vs Java):**
-- Node.js: Single-threaded + event loop
-- Java Tomcat: Thread per request (or thread pool)
-
-## Interview Answer
-
-> *"A process is an isolated execution environment with its own memory space. A thread lives within a process and shares memory with other threads. Processes are safer (crashes don't affect others) but heavier. Threads are lighter and communicate easily but require synchronization (mutex, semaphore) to avoid race conditions."*
-
-## Key Takeaway
-> Process = isolation. Thread = efficiency. Choose based on whether you need safety (process) or speed + shared state (thread).
-""",
-    },
 ]
 
-async def seed():
-    client = AsyncIOMotorClient(MONGODB_URL)
+def seed():
+    client = MongoClient(MONGODB_URL)
     db = client[DB_NAME]
     
     # Check if already seeded
-    count = await db.docs.count_documents({"is_public": True})
+    count = db.docs.count_documents({"is_public": True})
     if count > 0:
         print(f"✅ Already seeded ({count} public docs found). Skipping.")
         client.close()
         return
     
     # Create a system user for public content
-    system_user = await db.users.find_one({"email": "system@conceptflow.ai"})
+    system_user = db.users.find_one({"email": "system@conceptflow.ai"})
     if not system_user:
-        from passlib.context import CryptContext
-        pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
-        result = await db.users.insert_one({
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        result = db.users.insert_one({
             "name": "ConceptFlow",
             "email": "system@conceptflow.ai",
-            "password": pwd.hash("system-password-not-for-login"),
+            "password": pwd_context.hash(hashlib.sha256("system-password".encode()).hexdigest()),
             "created_at": datetime.utcnow(),
         })
         system_id = str(result.inserted_id)
@@ -486,15 +339,15 @@ async def seed():
             "is_ai_generated": False,
         })
     
-    result = await db.docs.insert_many(docs_to_insert)
+    result = db.docs.insert_many(docs_to_insert)
     print(f"✅ Seeded {len(result.inserted_ids)} docs")
     
     # Create text index for search
-    await db.docs.create_index([("title", "text"), ("content", "text"), ("tags", "text")])
+    db.docs.create_index([("title", "text"), ("content", "text"), ("tags", "text")])
     print("✅ Created text indexes")
     
     client.close()
     print("\n🎉 Database seeded! Run the server and start learning.\n")
 
 if __name__ == "__main__":
-    asyncio.run(seed())
+    seed()
