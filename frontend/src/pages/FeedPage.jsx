@@ -38,6 +38,26 @@ Brief intro to the concept.
 One-liner summary.
 `
 
+function ConfirmModal({ title, message, onConfirm, onClose, loading }) {
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 bg-black/90 backdrop-blur-md animate-fade-in">
+      <div className="card w-full max-w-sm animate-slide-up border-red-500/20 bg-red-500/5">
+        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20">
+          <Trash2 size={32} className="text-red-500" />
+        </div>
+        <h3 className="text-xl font-black text-bright text-center mb-2">{title}</h3>
+        <p className="text-muted text-center text-sm mb-10 leading-relaxed font-medium">{message}</p>
+        <div className="grid grid-cols-2 gap-3">
+          <button onClick={onClose} disabled={loading} className="btn-ghost !py-3">Cancel</button>
+          <button onClick={onConfirm} disabled={loading} className="btn-primary !bg-red-500 !shadow-red-500/20 !py-3">
+            {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Yes, Delete'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function DocEditorModal({ editId, onClose, onSave, initialContent, initialTitle }) {
   const [form, setForm] = useState({
     title: initialTitle || '',
@@ -196,13 +216,25 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
     } catch { toast.error('Failed') }
   }
 
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
   const handleDelete = async (e) => {
     e.stopPropagation()
-    if (!window.confirm('Delete this card?')) return
+    setShowConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    setDeleting(true)
     try {
       await onDelete(doc.id)
-      toast.success('Deleted')
-    } catch { toast.error('Failed to delete') }
+      toast.success('Document deleted successfully')
+    } catch { 
+      toast.error('Failed to eliminate document') 
+    } finally { 
+      setDeleting(false)
+      setShowConfirm(false)
+    }
   }
 
   const handleEditToggle = (e) => {
@@ -438,11 +470,11 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="flex items-center gap-1 p-2 rounded-xl text-muted hover:text-red-400 hover:bg-red-400/10 transition-all duration-300"
+                    className="flex items-center gap-2 p-2.5 rounded-2xl text-muted hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 active:bg-red-500/20"
                     title="Delete Card"
                   >
-                    <Trash2 size={15} />
-                    <span className="text-[10px] font-bold">Del</span>
+                    <Trash2 size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Del</span>
                   </button>
                 </div>
               )}
@@ -456,6 +488,17 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
         <div className="absolute -top-6 -right-6 w-12 h-12 bg-green-500/20 rotate-45 flex items-end justify-center pb-1">
           <CheckCircle size={12} className="text-green-400 -rotate-45" />
         </div>
+      )}
+
+      {/* Better Confirm Modal */}
+      {showConfirm && (
+        <ConfirmModal
+          title="Eliminate Doc?"
+          message={`Are you sure you want to remove "${doc.title}"? This cannot be undone.`}
+          loading={deleting}
+          onConfirm={confirmDelete}
+          onClose={() => setShowConfirm(false)}
+        />
       )}
     </div>
   )
