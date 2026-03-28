@@ -112,7 +112,13 @@ export default function Layout() {
 
         {/* Bottom Navigation (Mobile Only) */}
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-lg border-t border-border px-2 py-2 flex items-center justify-around z-50">
-          {NAV.slice(0, 5).map(({ to, icon: Icon, label }) => (
+          {[
+            NAV[0], // Feed
+            NAV[1], // AI Assistant
+            NAV[5], // Create Doc (Docs)
+            NAV[2], // Revision
+            NAV[6], // Profile
+          ].map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -124,26 +130,16 @@ export default function Layout() {
                 }`
               }
             >
-              <Icon size={20} className="transition-transform duration-200" />
-              <span className="text-[10px] font-medium tracking-wide">{label.split(' ')[0]}</span>
-              {/* Active Indicator */}
-              <NavLink to={to} className={({ isActive }) => `h-1 w-1 rounded-full bg-accent2 transition-all ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`} />
+              <div className="relative">
+                <Icon size={20} className="transition-transform duration-200" />
+                {/* Active Indicator Dot */}
+                <NavLink to={to} className={({ isActive }) => `absolute -bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-accent2 transition-all ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`} />
+              </div>
+              <span className="text-[10px] font-medium tracking-wide">
+                {label === 'Create Doc' ? 'Docs' : label.split(' ')[0]}
+              </span>
             </NavLink>
           ))}
-          
-          {/* Menu Dropup/More Button if needed, or just link to profile */}
-          <NavLink
-              to="/profile"
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-200 ${
-                  isActive ? 'text-accent2' : 'text-muted'
-                }`
-              }
-            >
-              <User size={20} />
-              <span className="text-[10px] font-medium tracking-wide">Me</span>
-               <NavLink to="/profile" className={({ isActive }) => `h-1 w-1 rounded-full bg-accent2 transition-all ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`} />
-            </NavLink>
         </nav>
       </div>
     </div>
