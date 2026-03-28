@@ -63,28 +63,29 @@
 
 /* Markdown prose styles */
 .prose-dark {
-  @apply text-text/90 leading-relaxed text-[15px];
+  @apply text-text/90 leading-relaxed text-[15.5px] break-words;
+  overflow-wrap: break-word;
 }
-.prose-dark h1 { @apply text-bright font-extrabold text-2xl mt-8 mb-4 tracking-tight; }
-.prose-dark h2 { @apply text-bright font-bold text-xl mt-8 mb-4 pb-2 border-b border-border/10; }
-.prose-dark h3 { @apply text-bright font-semibold text-lg mt-6 mb-3; }
-.prose-dark p { @apply my-4 text-muted/90; }
-.prose-dark a { @apply text-accent2 hover:text-accent no-underline hover:underline transition-all duration-200; }
-.prose-dark strong { @apply text-white font-bold; }
-.prose-dark em { @apply text-muted italic; }
-.prose-dark ul, .prose-dark ol { @apply my-4 pl-6; }
-.prose-dark li { @apply my-2 text-muted/90; }
+.prose-dark h1 { @apply text-bright font-black text-3xl sm:text-4xl mt-12 mb-6 tracking-tight leading-tight; }
+.prose-dark h2 { @apply text-bright font-black text-xl sm:text-2xl mt-12 mb-6 pb-3 border-b border-border/10 tracking-tight; }
+.prose-dark h3 { @apply text-bright font-bold text-lg sm:text-xl mt-8 mb-4 tracking-tight; }
+.prose-dark p { @apply my-5 text-muted/95 leading-relaxed; }
+.prose-dark a { @apply text-accent2 hover:text-accent font-bold no-underline hover:underline transition-all duration-200; }
+.prose-dark strong { @apply text-white font-black; }
+.prose-dark em { @apply text-muted italic font-medium; }
+.prose-dark ul, .prose-dark ol { @apply my-6 pl-8; }
+.prose-dark li { @apply my-3 text-muted/95; }
 .prose-dark blockquote { 
-  @apply py-4 rounded-r-2xl px-6 my-8 border-l-4 border-accent bg-accent/5 italic text-text shadow-inner;
+  @apply py-6 rounded-2xl px-8 my-10 border-l-8 border-accent bg-accent/5 italic text-text shadow-2xl shadow-accent/5;
 }
 .prose-dark code:not(pre code) { 
-  @apply bg-surface/80 text-accent2 px-1.5 py-0.5 rounded-md font-mono text-[0.9em] border border-border/30 shadow-sm;
+  @apply bg-surface/80 text-accent2 px-2 py-0.5 rounded-lg font-mono text-[0.85em] border border-border/30 shadow-sm font-bold;
 }
 .prose-dark pre { 
-  @apply my-8 rounded-2xl overflow-x-auto border border-border/40 bg-black/40 shadow-2xl;
+  @apply my-10 rounded-[1.5rem] overflow-x-auto border border-border/40 bg-black/60 shadow-2xl;
 }
 .prose-dark pre code { 
-  @apply font-mono text-[0.9rem] leading-relaxed p-6 block !bg-transparent;
+  @apply font-mono text-[0.85rem] leading-relaxed p-6 block !bg-transparent custom-scrollbar;
 }
 
 /* Transitions & Animations */
@@ -133,7 +134,12 @@
 .grad-accent { @apply bg-gradient-to-br from-accent to-accent2; }
 .grad-surface { @apply bg-gradient-to-b from-surface to-bg; }
 
-/* Responsive Grid Fixes */
+/* Mask Fades for Scroll */
+.mask-fade-right {
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
 .responsive-grid {
   @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4;
 }

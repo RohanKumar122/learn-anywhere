@@ -158,22 +158,22 @@ export default function DocPage() {
 
       {/* Header Section */}
       <div className="mb-10 animate-slide-up">
-        <div className="flex flex-wrap items-center gap-3 mb-6 relative z-10">
-          <span className={`badge border-2 shadow-sm ${DIFF_COLORS[doc.difficulty] || DIFF_COLORS.Medium}`}>
+        <div className="flex flex-wrap items-center gap-2.5 mb-6 relative z-10">
+          <span className={`badge border-2 shadow-sm py-1.5 px-4 ${DIFF_COLORS[doc.difficulty] || DIFF_COLORS.Medium}`}>
             {doc.difficulty}
           </span>
-          <span className="badge bg-surface/50 border border-border/30 backdrop-blur-sm text-accent2">{doc.category}</span>
+          <span className="badge bg-surface/50 border border-border/30 backdrop-blur-sm text-accent2 py-1.5 px-4 font-black">{doc.category}</span>
           {doc.is_ai_generated && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent border border-accent/20">
-              <Bot size={12} /> AI Assisted
+            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent border border-accent/20">
+              <Bot size={13} /> AI Assisted
             </div>
           )}
-          <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted ml-auto bg-surface/30 px-2 py-1 rounded-lg border border-border/20">
-            <Clock size={12} className="text-accent2" /> {doc.read_time_minutes}m read
-          </span>
+          <div className="hide-on-mobile flex items-center gap-1.5 text-[11px] font-black text-muted ml-auto bg-surface/40 px-3 py-1.5 rounded-xl border border-border/20">
+            <Clock size={13} className="text-accent2" /> {doc.read_time_minutes}m read
+          </div>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-black text-bright leading-[1.15] mb-6 tracking-tight group">
+        <h1 className="text-3xl sm:text-5xl font-black text-bright leading-[1.1] mb-6 tracking-tight">
           {doc.title}
         </h1>
 
@@ -184,30 +184,30 @@ export default function DocPage() {
         )}
 
         {/* Action buttons - Improved for mobile with horizontal scroll if needed */}
-        <div className="flex items-center gap-3 mb-10 pt-6 border-t border-border/30 overflow-x-auto no-scrollbar pb-2">
+        <div className="flex items-center gap-3 mb-10 pb-4 overflow-x-auto no-scrollbar mask-fade-right">
           <button onClick={handleBookmark}
-            className={`whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border transition-all duration-300 hover-lift ${
-              bookmarked ? 'border-accent2 text-accent2 bg-accent2/10 shadow-lg shadow-accent2/5' : 'border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30'
+            className={`whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-6 py-3.5 rounded-2xl border transition-all duration-300 transform active:scale-95 ${
+              bookmarked ? 'border-accent2 text-accent2 bg-accent2/10 shadow-lg shadow-accent2/10' : 'border-border/40 text-muted hover:border-accent2/40 hover:text-bright bg-surface/20'
             }`}>
-            <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
-            {bookmarked ? 'Saved' : 'Save'}
+            <Bookmark size={15} fill={bookmarked ? 'currentColor' : 'none'} />
+            {bookmarked ? 'Knowledge Saved' : 'Save To Brain'}
           </button>
           
           <button onClick={handleAddRevision}
-            className="whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border border-border/60 text-muted hover:border-yellow-400/50 hover:text-yellow-400 bg-surface/30 transition-all duration-300 hover-lift">
-            <RotateCcw size={14} /> Revise
+            className="whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-6 py-3.5 rounded-2xl border border-border/40 text-muted hover:border-yellow-400/40 hover:text-yellow-400 bg-surface/20 transition-all duration-300 transform active:scale-95">
+            <RotateCcw size={15} /> Add To Revision
           </button>
           
           <button onClick={() => setShowNoteInput(!showNoteInput)}
-            className={`whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border transition-all duration-300 hover-lift ${
-              showNoteInput ? 'border-accent text-accent bg-accent/10 opacity-100' : 'border-border/60 text-muted hover:border-accent/50 hover:text-bright bg-surface/30'
+            className={`whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-6 py-3.5 rounded-2xl border transition-all duration-300 transform active:scale-95 ${
+              showNoteInput ? 'border-accent text-accent bg-accent/10' : 'border-border/40 text-muted hover:border-accent/40 hover:text-bright bg-surface/20'
             }`}>
-            <StickyNote size={14} /> Note
+            <StickyNote size={15} /> Annotate
           </button>
           
           <button onClick={() => navigate(`/ai?topic=${encodeURIComponent(doc.title)}&doc_id=${id}`)}
-            className="whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30 transition-all duration-300 hover-lift">
-            <Bot size={14} /> Think Deep
+            className="whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-6 py-3.5 rounded-2xl border border-border/40 text-muted hover:border-accent2/40 hover:text-bright bg-surface/20 transition-all duration-300 transform active:scale-95">
+            <Bot size={15} /> Deep Think
           </button>
         </div>
 
@@ -260,10 +260,10 @@ export default function DocPage() {
       </div>
 
       {/* Tab Content Rendering */}
-      <div className="min-h-[50vh] pb-12">
+      <div className="min-h-[50vh] pb-12 relative z-10">
         {tab === 'read' && (
-          <div ref={contentRef} className="animate-fade-in relative z-10">
-            <div className="prose-dark max-w-none">
+          <div ref={contentRef} className="animate-fade-in">
+            <div className="prose-dark max-w-none overflow-x-hidden">
               <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                 {doc.content}
               </ReactMarkdown>
