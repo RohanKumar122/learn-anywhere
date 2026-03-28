@@ -17,4 +17,8 @@ async def disconnect_db():
         print("❌ Disconnected from MongoDB")
 
 def get_db():
+    global client, db
+    if db is None:
+        client = AsyncIOMotorClient(settings.MONGODB_URL)
+        db = client[settings.DB_NAME]
     return db

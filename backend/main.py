@@ -28,6 +28,10 @@ app.include_router(ai.router, prefix="/api/ai", tags=["AI"])
 app.include_router(revision.router, prefix="/api/revision", tags=["Revision"])
 app.include_router(search.router, prefix="/api/search", tags=["Search"])
 
+@app.get("/api/health") 
+async def health():
+    return {"status": "ok", "message": "Backend reached!"}
+
 @app.get("/")
 async def root():
     return {"message": "ConceptFlow AI API running"}

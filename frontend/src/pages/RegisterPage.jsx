@@ -46,17 +46,17 @@ export default function RegisterPage() {
             <div>
               <label className="text-xs font-medium text-muted mb-1.5 block">Full Name</label>
               <input className="input" placeholder="Rohan Sharma" value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                onChange={(e) => setForm({ ...form, name: e.target.value })} required autoComplete="name" />
             </div>
             <div>
               <label className="text-xs font-medium text-muted mb-1.5 block">Email</label>
               <input type="email" className="input" placeholder="you@example.com" value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+                onChange={(e) => setForm({ ...form, email: e.target.value })} required autoComplete="email" />
             </div>
             <div>
               <label className="text-xs font-medium text-muted mb-1.5 block">Password</label>
               <input type="password" className="input" placeholder="Min. 6 characters" value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+                onChange={(e) => setForm({ ...form, password: e.target.value })} required autoComplete="new-password" />
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 mt-2">
               {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
