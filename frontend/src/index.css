@@ -120,14 +120,19 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Skeleton */
+/* Skeleton & Shimmer */
 .skeleton {
-  @apply bg-gradient-to-r from-surface/20 via-surface/40 to-surface/20 bg-[length:200%_100%] animate-[shimmer_2.5s_infinite] rounded-2xl;
+  @apply bg-surface/30 relative overflow-hidden rounded-2xl;
+}
+
+.skeleton::after {
+  content: "";
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-accent/10 to-transparent -translate-x-full animate-[shimmer_1.8s_infinite_ease-in-out];
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* Premium Gradients */

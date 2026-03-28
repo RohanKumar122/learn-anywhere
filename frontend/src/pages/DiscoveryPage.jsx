@@ -226,8 +226,22 @@ export default function DiscoveryPage() {
           />
         ))}
 
+        {/* Shimmer Skeletons */}
         {loading && Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="skeleton h-64 w-full rounded-3xl" />
+          <div key={i} className="card !bg-surface/20 border-border/10 p-6 space-y-6 overflow-hidden relative min-h-[250px]">
+            <div className="flex justify-between items-start">
+              <div className="skeleton h-6 w-20 rounded-lg" />
+              <div className="skeleton h-10 w-10 rounded-full" />
+            </div>
+            <div className="space-y-3">
+              <div className="skeleton h-7 w-5/6 rounded-xl" />
+              <div className="skeleton h-16 w-full rounded-2xl opacity-40" />
+            </div>
+            <div className="flex gap-2 pt-4">
+              <div className="skeleton h-8 w-1/3 rounded-xl" />
+              <div className="skeleton h-8 w-1/3 rounded-xl ml-auto" />
+            </div>
+          </div>
         ))}
       </div>
 

@@ -725,6 +725,28 @@ export default function FeedPage() {
 
       {/* Feed Content */}
       <div className="space-y-6 stagger-load">
+        {/* Shimmer Skeletons */}
+        {loading && Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="card !bg-surface/20 border-border/10 p-6 space-y-6 overflow-hidden relative">
+            <div className="flex justify-between items-start">
+              <div className="flex gap-2">
+                <div className="skeleton h-6 w-20 rounded-lg" />
+                <div className="skeleton h-6 w-24 rounded-lg" />
+              </div>
+              <div className="skeleton h-8 w-24 rounded-xl" />
+            </div>
+            <div className="space-y-3">
+              <div className="skeleton h-8 w-3/4 rounded-xl" />
+              <div className="skeleton h-4 w-full rounded-lg opacity-60" />
+              <div className="skeleton h-4 w-5/6 rounded-lg opacity-60" />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <div className="skeleton h-10 w-28 rounded-2xl" />
+              <div className="skeleton h-10 w-28 rounded-2xl" />
+            </div>
+          </div>
+        ))}
+
         {docs.map((doc, idx) => (
           <div key={doc.id} style={{ animationDelay: `${idx * 50}ms` }}>
             <FeedCard
@@ -740,54 +762,47 @@ export default function FeedPage() {
         ))}
 
         {/* Pagination Controls */}
-        <div className="flex items-center justify-center gap-2 mt-12 py-8 border-t border-border/20 relative z-20">
-          <button
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page === 1 || loading}
-            className="btn-ghost !p-3 rounded-2xl disabled:opacity-20 border border-border/10 transition-all hover:bg-surface/40 active:scale-90"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface/30 rounded-2xl border border-border/10">
-            {Array.from({ length: Math.min(5, Math.ceil(docs.length / 10) + page) }).map((_, i) => {
-               // This is a bit simplified since we don't know total_pages from API, 
-               // but we can show current, prev, and some next pages if hasMore is true
-               const p = page > 2 ? page - 2 + i : i + 1
-               if (p < 1) return null
-               if (p > page && !hasMore) return null
-               
-               return (
-                 <button
-                   key={p}
-                   onClick={() => handlePageChange(p)}
-                   className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
-                     page === p 
-                       ? 'bg-accent2 text-white shadow-lg shadow-accent2/20' 
-                       : 'text-muted hover:text-bright hover:bg-white/5'
-                   }`}
-                 >
-                   {p}
-                 </button>
-               )
-            })}
+        {docs.length > 0 && (
+          <div className="flex items-center justify-center gap-2 mt-12 py-8 border-t border-border/20 relative z-20">
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1 || loading}
+              className="btn-ghost !p-3 rounded-2xl disabled:opacity-20 border border-border/10 transition-all hover:bg-surface/40 active:scale-90"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface/30 rounded-2xl border border-border/10">
+              {Array.from({ length: Math.min(5, Math.ceil(docs.length / 10) + page) }).map((_, i) => {
+                 const p = page > 2 ? page - 2 + i : i + 1
+                 if (p < 1) return null
+                 if (p > page && !hasMore) return null
+                 
+                 return (
+                   <button
+                     key={p}
+                     onClick={() => handlePageChange(p)}
+                     className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
+                       page === p 
+                         ? 'bg-accent2 text-white shadow-lg shadow-accent2/20' 
+                         : 'text-muted hover:text-bright hover:bg-white/5'
+                     }`}
+                   >
+                     {p}
+                   </button>
+                 )
+              })}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!hasMore || loading}
+              className="btn-ghost !p-3 rounded-2xl disabled:opacity-20 border border-border/10 transition-all hover:bg-surface/40 active:scale-90"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
-
-          <button
-            onClick={() => handlePageChange(page + 1)}
-            disabled={!hasMore || loading}
-            className="btn-ghost !p-3 rounded-2xl disabled:opacity-20 border border-border/10 transition-all hover:bg-surface/40 active:scale-90"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
-
-        {loading && (
-           <div className="flex justify-center py-4">
-              <div className="w-6 h-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-           </div>
         )}
-
         {!hasMore && docs.length > 0 && (
           <div className="mt-12 p-8 rounded-[2.5rem] bg-surface/30 border border-border/10 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 grad-accent opacity-[0.05] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
