@@ -136,36 +136,37 @@ export default function AIPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-border bg-surface/50">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 sm:py-4 border-b border-border bg-surface/50 gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center">
             <Bot size={16} className="text-white" />
           </div>
           <div>
-            <div className="font-semibold text-bright text-sm">ConceptFlow AI</div>
-            <div className="text-xs text-accent2">DSA + System Design Expert</div>
+            <div className="font-semibold text-bright text-sm leading-tight tracking-tight">ConceptFlow AI</div>
+            <div className="text-[10px] text-accent2 opacity-80 uppercase tracking-wider font-bold">Expert Assistant</div>
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex bg-border/20 p-0.5 rounded-lg border border-border/50">
+        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
+          <div className="flex bg-border/20 p-1 rounded-xl border border-border/30">
             <button 
               onClick={() => setSelectedModel('gemini')}
-              className={`px-3 py-1 text-[10px] font-medium rounded-md transition-all ${selectedModel === 'gemini' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-bright'}`}
+              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${selectedModel === 'gemini' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
             >
               Gemini
             </button>
             <button 
               onClick={() => setSelectedModel('openai')}
-              className={`px-3 py-1 text-[10px] font-medium rounded-md transition-all ${selectedModel === 'openai' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-bright'}`}
+              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${selectedModel === 'openai' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
             >
               OpenAI
             </button>
           </div>
 
           {chatHistory.length > 0 && (
-            <button onClick={clearChat} className="flex items-center gap-1.5 text-xs text-muted hover:text-accent transition-colors">
-              <Trash2 size={13} /> Clear
+            <button onClick={clearChat} className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-red-400 transition-colors">
+              <Trash2 size={13} />
+              <span className="hidden xs:inline">Clear</span>
             </button>
           )}
         </div>
@@ -194,13 +195,13 @@ export default function AIPage() {
         )}
 
         {chatHistory.map((msg, i) => (
-          <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={i} className={`flex gap-2 sm:gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center flex-shrink-0 mt-1">
                 <Bot size={14} className="text-white" />
               </div>
             )}
-            <div className={`max-w-2xl ${msg.role === 'user' ? 'order-first' : ''}`}>
+            <div className={`max-w-[88%] sm:max-w-2xl min-w-0 ${msg.role === 'user' ? 'order-first' : ''}`}>
               {msg.role === 'user' ? (
                 <div className="bg-accent/10 border border-accent/20 rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm text-text">
                   {msg.content}

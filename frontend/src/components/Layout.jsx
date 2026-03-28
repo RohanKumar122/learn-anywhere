@@ -20,7 +20,6 @@ const NAV = [
 export default function Layout() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
-  const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -49,7 +48,6 @@ export default function Layout() {
           <NavLink
             key={to}
             to={to}
-            onClick={() => setMobileOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                 isActive
@@ -89,34 +87,66 @@ export default function Layout() {
         <SidebarContent />
       </aside>
 
-      {/* Mobile Sidebar */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-60 bg-surface border-r border-border">
-            <SidebarContent />
-          </aside>
-        </div>
-      )}
-
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative pb-[70px] lg:pb-0">
         {/* Mobile Header */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 bg-surface border-b border-border">
-          <button onClick={() => setMobileOpen(true)} className="btn-icon">
-            <Menu size={20} />
-          </button>
+        <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-surface border-b border-border z-10">
           <div className="flex items-center gap-2">
-            <Brain size={18} className="text-accent" />
-            <span className="font-bold text-bright text-sm">ConceptFlow AI</span>
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center">
+              <Brain size={16} className="text-white" />
+            </div>
+            <span className="font-bold text-bright text-sm tracking-tight">ConceptFlow AI</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-accent2 flex items-center justify-center text-white text-[10px] font-bold">
+              {user?.name?.[0]?.toUpperCase()}
+            </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto custom-scrollbar">
           <Outlet />
         </main>
+
+        {/* Bottom Navigation (Mobile Only) */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-lg border-t border-border px-2 py-2 flex items-center justify-around z-50">
+          {NAV.slice(0, 5).map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? 'text-accent2'
+                    : 'text-muted hover:text-text'
+                }`
+              }
+            >
+              <Icon size={20} className="transition-transform duration-200" />
+              <span className="text-[10px] font-medium tracking-wide">{label.split(' ')[0]}</span>
+              {/* Active Indicator */}
+              <NavLink to={to} className={({ isActive }) => `h-1 w-1 rounded-full bg-accent2 transition-all ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`} />
+            </NavLink>
+          ))}
+          
+          {/* Menu Dropup/More Button if needed, or just link to profile */}
+          <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-200 ${
+                  isActive ? 'text-accent2' : 'text-muted'
+                }`
+              }
+            >
+              <User size={20} />
+              <span className="text-[10px] font-medium tracking-wide">Me</span>
+               <NavLink to="/profile" className={({ isActive }) => `h-1 w-1 rounded-full bg-accent2 transition-all ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`} />
+            </NavLink>
+        </nav>
       </div>
     </div>
   )
 }
+

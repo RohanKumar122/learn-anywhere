@@ -157,25 +157,25 @@ export default function DocPage() {
         )}
 
         {/* Action buttons */}
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           <button onClick={handleBookmark}
-            className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${
-              bookmarked ? 'border-accent2 text-accent2 bg-accent2/10' : 'border-border text-muted hover:border-accent2 hover:text-accent2'
+            className={`flex items-center justify-center gap-2 text-sm px-4 py-2.5 rounded-xl border transition-all ${
+              bookmarked ? 'border-accent2 text-accent2 bg-accent2/5' : 'border-border text-muted hover:border-accent2 hover:text-accent2'
             }`}>
-            <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
+            <Bookmark size={15} fill={bookmarked ? 'currentColor' : 'none'} />
             {bookmarked ? 'Saved' : 'Save'}
           </button>
           <button onClick={handleAddRevision}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-border text-muted hover:border-yellow-400 hover:text-yellow-400 transition-colors">
-            <RotateCcw size={14} /> Revise Later
+            className="flex items-center justify-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-border text-muted hover:border-yellow-400 hover:text-yellow-400 transition-all">
+            <RotateCcw size={15} /> Revise
           </button>
           <button onClick={() => setShowNoteInput(!showNoteInput)}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-border text-muted hover:border-accent hover:text-accent transition-colors">
-            <StickyNote size={14} /> Add Note
+            className="flex items-center justify-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-border text-muted hover:border-accent hover:text-accent transition-all">
+            <StickyNote size={15} /> Add Note
           </button>
           <button onClick={() => navigate(`/ai?topic=${encodeURIComponent(doc.title)}`)}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-border text-muted hover:border-accent2 hover:text-accent2 transition-colors">
-            <Bot size={14} /> Ask AI
+            className="flex items-center justify-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-border text-muted hover:border-accent2 hover:text-accent2 transition-all">
+            <Bot size={15} /> Ask AI
           </button>
         </div>
 
