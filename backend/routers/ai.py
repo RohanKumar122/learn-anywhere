@@ -47,6 +47,11 @@ Format your response in clean Markdown."""
         if resp.status_code != 200:
             abort(502, description=f"Gemini API error: {resp.text}")
         data = resp.json()
+        if not data.get("candidates") or not data["candidates"][0].get("content"):
+            if "error" in data:
+                return f"⚠️ AI Error: {data['error'].get('message', 'Unknown API error')}"
+            return "⚠️ Gemini returned an empty response. This might be due to safety filters."
+        
         return data["candidates"][0]["content"]["parts"][0]["text"]
 
 def call_openai(prompt: str, history: list = []) -> str:
