@@ -35,6 +35,7 @@ export const aiAPI = {
   chats: () => api.get('/ai/chats'),
   quiz: (docId, model_choice) => api.post(`/ai/generate-quiz/${docId}`, null, { params: { model_choice } }),
   flashcards: (docId, model_choice) => api.post(`/ai/generate-flashcards/${docId}`, null, { params: { model_choice } }),
+  format: (data) => api.post('/ai/format', data),
 }
 
 // Revision

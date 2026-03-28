@@ -13,7 +13,7 @@ def call_gemini(prompt: str, history: list = [], mode: str = "cs") -> str:
         return "⚠️ Gemini API key not configured. Add GEMINI_API_KEY to your .env file."
     
     # The correct model name for Google's API as of 2024+ is gemini-1.5-flash
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={settings.GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
     
     contents = []
     for msg in history:
@@ -83,6 +83,37 @@ def call_openai(prompt: str, history: list = [], mode: str = "cs") -> str:
             abort(502, description=f"OpenAI error: {resp.text}")
         return resp.json()["choices"][0]["message"]["content"]
 
+@ai_bp.route("/format", methods=["POST"])
+@login_required
+def format_doc(current_user):
+    data = request.json
+    raw_text = data.get("text", "")
+    if not raw_text:
+        return jsonify({"markdown": ""})
+    
+    prompt = f"""
+    Transform the following messy text extracted from a PDF into a professionally formatted Markdown document.
+    - Use clear headings (# and ##)
+    - Fix broken paragraphs and sentences
+    - Use bullet points for lists
+    - Include code blocks if technical concepts are found
+    - Keep it concise and logical for a learning feed.
+    - DO NOT add conversational filler, only output the Markdown.
+    
+    RAW TEXT:
+    {raw_text[:8000]}
+    """
+    
+    try:
+        # Use our existing call_gemini helper
+        formatted = call_gemini(prompt, mode="general")
+        if formatted.startswith("⚠️"):
+            abort(400, description=formatted)
+        return jsonify({"markdown": formatted})
+    except Exception as e:
+        print(f"Format error: {e}")
+        return jsonify({"markdown": raw_text})
+
 @ai_bp.route("/ask", methods=["POST"])
 @login_required
 def ask_ai(current_user):
@@ -98,16 +129,12 @@ def ask_ai(current_user):
         try:
             doc = db.docs.find_one({"_id": ObjectId(doc_id)})
             if doc:
-                # Prepend doc context to the first prompt of the discussion
-                # or always include it if history is empty
                 if not history:
                     question = f"I want to discuss this document with you.\n\nTITLE: {doc['title']}\nCONTENT: {doc['content']}\n\nMY FIRST QUESTION: {question}"
                 else:
-                    # For ongoing chat, we just remind the AI of the context title
-                    # (actual content is already in earlier history usually, but doesn't hurt to keep context clear)
                     question = f"(Discussing Doc: {doc['title']})\n{question}"
         except:
-            pass # Invalid ID or db error, proceed without extra context
+            pass
     
     provider = data.get("model_choice", "gemini").lower()
     mode = data.get("mode", "cs").lower()
@@ -206,23 +233,18 @@ Return ONLY valid JSON array like:
   }}
 ]"""
     
-    # Respect user model choice
     provider = request.args.get("model_choice", "gemini").lower()
     
     if provider == "openai" and settings.OPENAI_API_KEY:
         raw = call_openai(prompt)
     elif settings.GEMINI_API_KEY:
         raw = call_gemini(prompt)
-    elif settings.OPENAI_API_KEY:
-        raw = call_openai(prompt)
     else:
         return jsonify({"quiz": get_sample_quiz()})
     
     try:
-        # Improved parsing to handle markdown blocks (like ```json ... ```)
         clean_raw = raw.strip()
         if "```" in clean_raw:
-            # Extract content between markdown code blocks if present
             import re
             json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', clean_raw)
             if json_match:

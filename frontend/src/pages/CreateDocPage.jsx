@@ -98,12 +98,25 @@ export default function CreateDocPage() {
         }
         
         const title = file.name.replace('.pdf', '').replace(/[-_]/g, ' ')
-        setForm(prev => ({
-          ...prev,
-          title: prev.title || title,
-          content: fullText.trim()
-        }))
-        toast.success(`Extracted ${pdf.numPages} pages!`)
+        
+        const tid = toast.loading('Intelligently formatting...')
+        try {
+          const { data: fmt } = await aiAPI.format({ text: fullText.trim() })
+          setForm(prev => ({
+            ...prev,
+            title: prev.title || title,
+            content: fmt.markdown
+          }))
+          toast.success('Formatted!', { id: tid })
+        } catch (err) {
+          const errMsg = err.response?.data?.description || 'AI formatting failed'
+          setForm(prev => ({
+            ...prev,
+            title: prev.title || title,
+            content: fullText.trim()
+          }))
+          toast.error(`${errMsg}, showing raw text`, { id: tid, duration: 4000 })
+        }
       } catch { toast.error('Extraction failed') }
       finally { setExtracting(false); e.target.value = '' }
     }

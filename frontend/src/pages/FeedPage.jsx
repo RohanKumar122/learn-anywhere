@@ -459,15 +459,29 @@ export default function FeedPage() {
         }
 
         const title = file.name.replace('.pdf', '').replace(/[-_]/g, ' ')
-        const markdown = `# ${title}\n\n${fullText.trim()}`
         
-        setEditorModal({ 
-          open: true, 
-          id: null, 
-          initialContent: markdown, 
-          initialTitle: title 
-        })
-        toast.success(`Extracted ${pdf.numPages} pages locally!`)
+        // --- AI Formatting Step ---
+        const toastId = toast.loading('Architecting concept...')
+        try {
+          const { data: fmtData } = await aiAPI.format({ text: fullText.trim() })
+          setEditorModal({ 
+            open: true, 
+            id: null, 
+            initialContent: fmtData.markdown, 
+            initialTitle: title 
+          })
+          toast.success('Successfully architected!', { id: toastId })
+        } catch (err) {
+          console.error(err)
+          const errMsg = err.response?.data?.description || 'AI formatting failed'
+          setEditorModal({ 
+            open: true, 
+            id: null, 
+            initialContent: `# ${title}\n\n${fullText.trim()}`, 
+            initialTitle: title 
+          })
+          toast.error(`${errMsg}, showing raw text`, { id: toastId, duration: 4000 })
+        }
       } catch (err) {
         console.error(err)
         toast.error('Failed to extract text from PDF')
