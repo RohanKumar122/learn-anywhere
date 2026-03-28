@@ -89,25 +89,25 @@ export default function Layout() {
       </aside>
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative pb-[70px] lg:pb-0">
-        {/* Mobile Header */}
-        <header className="lg:hidden flex items-center justify-between px-4 py-3 bg-surface border-b border-border z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center">
-              <Brain size={16} className="text-white" />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        {/* Mobile Header - Sticky and Glassy */}
+        <header className="lg:hidden sticky top-0 flex items-center justify-between px-4 py-3 bg-bg/80 backdrop-blur-xl border-b border-border/50 z-30">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-accent2 flex items-center justify-center shadow-lg shadow-accent/20">
+              <Brain size={18} className="text-white" />
             </div>
-            <span className="font-bold text-bright text-sm tracking-tight">ConceptFlow AI</span>
+            <span className="font-bold text-bright text-base tracking-tight">ConceptFlow AI</span>
           </div>
           
           <div className="flex items-center gap-3">
-             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent to-accent2 flex items-center justify-center text-white text-[10px] font-bold">
+             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent2 flex items-center justify-center text-white text-[10px] font-bold border-2 border-white/10 shadow-md">
               {user?.name?.[0]?.toUpperCase()}
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar">
+        <main className="flex-1 overflow-y-auto custom-scrollbar page-transition pb-[80px] lg:pb-0">
           <Outlet />
         </main>
 
@@ -115,38 +115,38 @@ export default function Layout() {
         {moreDrawerOpen && (
           <>
             <div 
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] animate-fade-in"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] animate-fade-in"
               onClick={() => setMoreDrawerOpen(false)}
             />
-            <div className="fixed bottom-[70px] left-4 right-4 bg-surface border border-border rounded-2xl p-4 z-[70] animate-slide-up shadow-2xl">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b border-border">
-                <span className="font-bold text-bright flex items-center gap-2">
-                  <Menu size={16} className="text-accent2" /> More
+            <div className="fixed bottom-[85px] left-4 right-4 bg-surface/95 backdrop-blur-2xl border border-white/10 rounded-3xl p-5 z-[70] animate-slide-up shadow-2xl">
+              <div className="flex items-center justify-between mb-5 pb-3 border-b border-border/50">
+                <span className="font-bold text-bright flex items-center gap-2 text-base">
+                  <Menu size={18} className="text-accent2" /> Menu
                 </span>
-                <button onClick={() => setMoreDrawerOpen(false)} className="text-muted"><X size={18} /></button>
+                <button onClick={() => setMoreDrawerOpen(false)} className="btn-icon"><X size={20} /></button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 {[NAV[3], NAV[4], NAV[6]].map(({ to, icon: Icon, label }) => (
                   <NavLink
                     key={to}
                     to={to}
                     onClick={() => setMoreDrawerOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                        isActive ? 'bg-accent/10 border-accent/30 text-accent' : 'border-border bg-card/40 text-muted'
+                      `flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all duration-300 ${
+                        isActive ? 'bg-accent/10 border-accent/40 text-accent shadow-lg shadow-accent/5' : 'border-border/40 bg-card/40 text-muted hover:bg-card/60'
                       }`
                     }
                   >
-                    <Icon size={18} />
-                    <span className="text-sm font-medium">{label}</span>
+                    <Icon size={20} />
+                    <span className="text-xs font-semibold">{label}</span>
                   </NavLink>
                 ))}
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 transition-all text-left"
+                  className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-400 transition-all hover:bg-red-500/10"
                 >
-                  <LogOut size={18} />
-                  <span className="text-sm font-medium">Logout</span>
+                  <LogOut size={20} />
+                  <span className="text-xs font-semibold">Logout</span>
                 </button>
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function Layout() {
         )}
 
         {/* Bottom Navigation (Mobile Only) */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-lg border-t border-border px-2 py-2 flex items-center justify-around z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.1)]">
+        <nav className="lg:hidden fixed bottom-4 left-4 right-4 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl px-2 py-2 flex items-center justify-around z-50 shadow-2xl">
           {[
             NAV[0], // Feed
             NAV[1], // AI Assistant
@@ -166,19 +166,18 @@ export default function Layout() {
               to={to}
               onClick={() => setMoreDrawerOpen(false)}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-200 ${
+                `flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-300 ${
                   isActive
-                    ? 'text-accent2'
-                    : 'text-muted hover:text-text'
+                    ? 'text-accent2 bg-accent2/10 shadow-inner'
+                    : 'text-muted hover:text-bright'
                 }`
               }
             >
               <div className="relative">
-                <Icon size={20} className="transition-transform duration-200" />
-                {/* Active Indicator Dot */}
-                <div className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-accent2 transition-all duration-300 ${to === window.location.pathname ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`} />
+                <Icon size={20} className={`transition-transform duration-300 ${to === window.location.pathname ? 'scale-110' : ''}`} />
+                {/* Active Indicator Dot removed for cleaner look or changed */}
               </div>
-              <span className="text-[10px] font-medium tracking-wide">
+              <span className="text-[10px] font-bold tracking-wider uppercase">
                 {label === 'Create Doc' ? 'Docs' : label.split(' ')[0]}
               </span>
             </NavLink>
@@ -187,14 +186,14 @@ export default function Layout() {
           {/* More Button */}
           <button
             onClick={() => setMoreDrawerOpen(!moreDrawerOpen)}
-            className={`flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-200 ${
-              moreDrawerOpen ? 'text-accent2' : 'text-muted'
+            className={`flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-300 ${
+              moreDrawerOpen ? 'text-accent2 bg-accent2/10' : 'text-muted'
             }`}
           >
             <div className="relative">
-              <MoreHorizontal size={20} className="transition-transform duration-200" />
+              <MoreHorizontal size={20} className="transition-transform duration-300" />
             </div>
-            <span className="text-[10px] font-medium tracking-wide">More</span>
+            <span className="text-[10px] font-bold tracking-wider uppercase">More</span>
           </button>
         </nav>
       </div>

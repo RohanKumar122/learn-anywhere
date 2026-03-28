@@ -136,18 +136,18 @@ export default function AIPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex flex-col border-b border-border bg-surface/50 backdrop-blur-md sticky top-0 z-20">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border/10">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-accent2 flex items-center justify-center shadow-lg shadow-accent/20">
-              <Bot size={16} className="text-white" />
+      <div className="flex flex-col border-b border-border/40 bg-bg/80 backdrop-blur-xl sticky top-0 z-20 shadow-xl shadow-black/5">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/10">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl grad-accent flex items-center justify-center shadow-lg shadow-accent/20">
+              <Bot size={20} className="text-white" />
             </div>
             <div>
-              <div className="font-bold text-bright text-xs tracking-tight">ConceptFlow AI</div>
-              <div className="flex items-center gap-1.5 leading-none">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[9px] text-muted font-bold uppercase tracking-widest">
-                  {aiMode === 'cs' ? 'Expert' : 'General'} Mode
+              <div className="font-black text-bright text-sm tracking-tight">ConceptFlow AI</div>
+              <div className="flex items-center gap-1.5 leading-none mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
+                <span className="text-[9px] text-accent2 font-black uppercase tracking-widest">
+                  {aiMode === 'cs' ? 'Expert CS Tutor' : 'General Intelligence'}
                 </span>
               </div>
             </div>
@@ -157,30 +157,30 @@ export default function AIPage() {
             {chatHistory.length > 0 && (
               <button 
                 onClick={clearChat} 
-                className="p-2 rounded-lg text-muted hover:text-red-400 hover:bg-red-400/5 transition-all"
-                title="Clear Chat"
+                className="btn-icon !p-1.5 text-muted hover:text-red-400"
+                title="Clear Session"
               >
-                <Trash2 size={16} />
+                <Trash2 size={18} />
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-2 bg-surface/30">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-surface/20">
           {/* Mode Selection */}
-          <div className="flex items-center bg-bg/50 p-1 rounded-xl border border-border/30">
+          <div className="flex items-center bg-bg/50 p-1.5 rounded-2xl border border-border/40 shadow-inner">
             {[
-              { id: 'cs', label: 'CS Expert', icon: Sparkles },
-              { id: 'general', label: 'General AI', icon: Bot },
-            ].map(({ id, label, icon: Icon }) => (
+              { id: 'cs', label: 'CS Expert', icon: Sparkles, active: 'bg-accent text-white shadow-lg shadow-accent/20' },
+              { id: 'general', label: 'General AI', icon: Bot, active: 'bg-accent text-white shadow-lg shadow-accent/20' },
+            ].map(({ id, label, icon: Icon, active }) => (
               <button
                 key={id}
                 onClick={() => setAiMode(id)}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 ${
-                  aiMode === id ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                  aiMode === id ? active : 'text-muted hover:text-bright'
                 }`}
               >
-                <Icon size={12} />
+                <Icon size={14} />
                 <span className="hidden xs:inline">{label}</span>
                 <span className="xs:hidden">{label.split(' ')[0]}</span>
               </button>
@@ -188,15 +188,15 @@ export default function AIPage() {
           </div>
 
           {/* Model selection */}
-          <div className="flex items-center bg-bg/50 p-1 rounded-xl border border-border/30">
+          <div className="flex items-center bg-bg/50 p-1.5 rounded-2xl border border-border/40 shadow-inner">
             {['Gemini', 'OpenAI'].map((model) => {
               const id = model.toLowerCase();
               return (
                 <button
                   key={id}
                   onClick={() => setModelChoice(id)}
-                  className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 ${
-                    modelChoice === id ? 'bg-accent2 text-white shadow-md' : 'text-muted hover:text-bright'
+                  className={`flex-1 sm:flex-initial px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                    modelChoice === id ? 'bg-accent2 text-white shadow-lg shadow-accent2/20' : 'text-muted hover:text-bright'
                   }`}
                 >
                   {model}
@@ -208,33 +208,35 @@ export default function AIPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 py-8 space-y-8 custom-scrollbar">
         {chatHistory.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-accent/20 to-accent2/20 flex items-center justify-center mb-6 animate-float">
-              <Sparkles size={40} className="text-accent2" />
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-slide-up">
+            <div className="w-24 h-24 rounded-[2.5rem] bg-gradient-to-br from-accent/20 to-accent2/20 flex items-center justify-center mb-8 animate-float shadow-2xl relative">
+              <div className="absolute inset-0 bg-accent2/10 blur-3xl rounded-full" />
+              <Sparkles size={48} className="text-accent2 relative z-10" />
             </div>
-            <h2 className="text-2xl font-bold text-bright mb-2 tracking-tight">
-              {aiMode === 'cs' ? 'CS Tutor AI' : 'General Assistant'}
+            <h2 className="text-4xl font-black text-bright mb-3 tracking-tighter">
+               Architect Your Knowledge
             </h2>
-            <p className="text-muted text-sm max-w-sm mb-8 leading-relaxed">
+            <p className="text-muted text-base max-w-sm mb-12 leading-relaxed font-medium">
               {aiMode === 'cs' 
-                ? 'Master DSA, System Design, and CS fundamentals with expert guidance and real-world analogies.'
-                : 'Your versatile AI companion for brainstorming, learning, writing, or solving daily tasks.'}
+                ? 'Deep dive into computer science with analogies, visual explanations, and expert-level code analysis.'
+                : 'Solve complex problems, brainstorm ideas, or learn anything with your advanced AI research partner.'}
             </p>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
-              {QUICK_PROMPTS.slice(0, 4).map(p => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl px-2">
+              {QUICK_PROMPTS.slice(0, 4).map((p, idx) => (
                 <button
                   key={p}
                   onClick={() => sendMessage(p)}
-                  className="group text-left p-4 rounded-2xl border border-border/40 bg-card/30 hover:border-accent2/50 hover:bg-accent2/5 transition-all duration-300"
+                  className="group text-left p-5 rounded-3xl border-2 border-border/40 bg-card/20 hover:border-accent2/40 hover:bg-accent2/5 transition-all duration-300 hover-lift shadow-lg"
+                  style={{ animationDelay: `${idx * 100}ms` }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center group-hover:bg-accent2/20 transition-colors">
-                      <Sparkles size={14} className="text-muted group-hover:text-accent2" />
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-surface flex items-center justify-center group-hover:bg-accent2/20 transition-all border border-border/30 group-hover:border-accent2/30">
+                      <Sparkles size={16} className="text-muted group-hover:text-accent2" />
                     </div>
-                    <span className="text-sm font-medium text-muted group-hover:text-bright transition-colors">{p}</span>
+                    <span className="text-sm font-bold text-muted group-hover:text-bright transition-colors">{p}</span>
                   </div>
                 </button>
               ))}
@@ -243,54 +245,58 @@ export default function AIPage() {
         )}
 
         {chatHistory.map((msg, i) => (
-          <div key={i} className={`flex gap-3 sm:gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+          <div key={i} className={`flex gap-4 sm:gap-6 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
             {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-accent2 flex items-center justify-center flex-shrink-0 mt-1 shadow-md">
-                <Bot size={16} className="text-white" />
+              <div className="w-10 h-10 rounded-[1.25rem] grad-accent flex items-center justify-center flex-shrink-0 mt-1 shadow-xl shadow-accent/20 border-2 border-white/10">
+                <Bot size={20} className="text-white" />
               </div>
             )}
-            <div className={`max-w-[85%] sm:max-w-2xl min-w-0 ${msg.role === 'user' ? 'order-first' : ''}`}>
+            <div className={`max-w-[90%] sm:max-w-2xl min-w-0 ${msg.role === 'user' ? 'order-first' : ''}`}>
               {msg.role === 'user' ? (
-                <div className="bg-accent/10 border border-accent/30 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-text shadow-sm">
+                <div className="bg-accent/10 border-2 border-accent/20 rounded-[2rem] rounded-tr-sm px-6 py-4 text-[15px] font-medium text-text shadow-sm hover:border-accent/40 transition-colors">
                   {msg.content}
                 </div>
               ) : (
-                <div className="bg-surface/80 backdrop-blur-sm border border-border/60 rounded-2xl rounded-tl-sm px-5 py-4 shadow-md">
-                  <div className="prose-dark text-[14px]">
+                <div className="bg-card shadow-2xl border border-border/40 rounded-[2rem] rounded-tl-sm px-7 py-6 relative group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 grad-accent opacity-[0.03] -translate-y-1/2 translate-x-1/2 rounded-full blur-2xl" />
+                  <div className="prose-dark relative z-10">
                     <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                       {msg.content}
                     </ReactMarkdown>
                   </div>
                   {/* Save as doc button */}
-                  <div className="mt-4 pt-3 border-t border-border/30 flex gap-3">
+                  <div className="mt-8 pt-5 border-t border-border/10 flex items-center justify-between relative z-10">
                     <button
                       onClick={() => setSaveModal(msg.content)}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-accent2 transition-all p-1 -m-1"
+                      className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted hover:text-accent2 transition-all group/btn bg-surface/50 px-3 py-1.5 rounded-xl border border-border/20"
                     >
-                      <Save size={13} /> 
-                      <span>Save Discovery</span>
+                      <Save size={14} className="group-hover/btn:scale-110 transition-transform" /> 
+                      <span>Preserve Discovery</span>
                     </button>
+                    {msg.chat_id && (
+                       <span className="text-[9px] text-muted/30 font-mono">ID: {msg.chat_id.slice(-8)}</span>
+                    )}
                   </div>
                 </div>
               )}
             </div>
             {msg.role === 'user' && (
-              <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <User size={16} className="text-accent" />
+              <div className="w-10 h-10 rounded-[1.25rem] bg-accent/20 border-2 border-accent/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <User size={20} className="text-accent" />
               </div>
             )}
           </div>
         ))}
 
         {loading && (
-          <div className="flex gap-3">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center flex-shrink-0">
-              <Bot size={14} className="text-white" />
+          <div className="flex gap-4">
+            <div className="w-10 h-10 rounded-[1.25rem] grad-accent flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Bot size={18} className="text-white" />
             </div>
-            <div className="bg-surface border border-border rounded-2xl rounded-tl-sm px-4 py-3">
-              <div className="flex gap-1 items-center">
-                {[0, 150, 300].map(d => (
-                  <div key={d} className="w-2 h-2 bg-accent2 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+            <div className="bg-card border border-border/40 rounded-[2rem] rounded-tl-sm px-6 py-4 shadow-xl">
+              <div className="flex gap-1.5 items-center h-6">
+                {[0, 200, 400].map(d => (
+                  <div key={d} className="w-2.5 h-2.5 bg-accent2 rounded-full animate-bounce shadow-[0_0_8px_rgba(78,204,163,0.5)]" style={{ animationDelay: `${d}ms` }} />
                 ))}
               </div>
             </div>
@@ -301,34 +307,34 @@ export default function AIPage() {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-bg/80 backdrop-blur-xl border-t border-border">
+      <div className="p-4 sm:p-6 bg-bg/80 backdrop-blur-2xl border-t border-border/40 relative z-30">
         <div className="max-w-3xl mx-auto relative group">
           <textarea
-            className="w-full bg-surface/50 border border-border/60 hover:border-accent2/30 focus:border-accent2 rounded-2xl pl-4 pr-14 py-4 text-sm resize-none focus:outline-none focus:ring-4 focus:ring-accent2/5 transition-all min-h-[56px] custom-scrollbar"
-            placeholder={aiMode === 'cs' ? "Deep dive into DSA or Systems..." : "What's on your mind?"}
+            className="w-full bg-surface/30 border-2 border-border/40 hover:border-accent2/40 focus:border-accent2 rounded-[2rem] pl-6 pr-16 py-5 text-[15px] resize-none focus:outline-none focus:ring-8 focus:ring-accent2/5 transition-all min-h-[64px] custom-scrollbar shadow-2xl"
+            placeholder={aiMode === 'cs' ? "Deep dive into algorithms or architectures..." : "What's the next frontier of your curiosity?"}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
             }}
             rows={1}
-            style={{ height: 'auto', minHeight: '56px' }}
+            style={{ height: 'auto', minHeight: '64px' }}
           />
           <button
             onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            className="absolute right-2 top-2 bottom-2 w-10 btn-primary !p-0 rounded-xl shadow-lg shadow-accent/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:hover:scale-100"
+            className="absolute right-2.5 top-2.5 bottom-2.5 w-12 grad-accent !p-0 rounded-2xl shadow-xl shadow-accent/20 transition-all hover:scale-105 active:scale-90 disabled:opacity-20 disabled:hover:scale-100 flex items-center justify-center border-t border-white/20"
           >
             {loading ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <Send size={18} />
+              <Send size={22} className="text-white" />
             )}
           </button>
         </div>
-        <div className="flex items-center justify-center gap-4 mt-2">
-          <p className="text-[10px] text-muted font-medium uppercase tracking-widest opacity-60">
-            Shift + Enter for new line • Press Enter to Send
+        <div className="flex items-center justify-center gap-6 mt-4">
+          <p className="text-[10px] text-muted font-black uppercase tracking-[0.2em] opacity-40">
+            Shift + Enter for new line • Enter to Command
           </p>
         </div>
       </div>

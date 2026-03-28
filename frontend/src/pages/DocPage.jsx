@@ -117,100 +117,122 @@ export default function DocPage() {
   }
 
   if (loading) return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-4">
-      <div className="skeleton h-8 w-24 mb-6" />
-      <div className="skeleton h-8 w-3/4" />
-      <div className="skeleton h-4 w-full" />
-      <div className="skeleton h-4 w-full" />
-      <div className="skeleton h-64 w-full" />
+    <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
+      <div className="skeleton h-8 w-32" />
+      <div className="skeleton h-12 w-full" />
+      <div className="space-y-4 pt-8">
+        <div className="skeleton h-4 w-full" />
+        <div className="skeleton h-4 w-11/12" />
+        <div className="skeleton h-4 w-full" />
+        <div className="skeleton h-64 w-full mt-8" />
+      </div>
     </div>
   )
 
   if (!doc) return (
-    <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-      <p className="text-4xl mb-3">😕</p>
-      <p className="text-text font-medium">Document not found</p>
-      <button onClick={() => navigate(-1)} className="btn-ghost mt-4">Go Back</button>
+    <div className="max-w-3xl mx-auto px-4 py-24 text-center">
+      <div className="w-24 h-24 bg-surface rounded-full flex items-center justify-center mx-auto mb-8">
+        <X size={40} className="text-muted/30" />
+      </div>
+      <h2 className="text-2xl font-black text-bright mb-2">Document not found</h2>
+      <p className="text-muted text-sm mb-8">The document you're looking for might have been moved or deleted.</p>
+      <button onClick={() => navigate(-1)} className="btn-primary mx-auto">Go Back</button>
     </div>
   )
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="max-w-3xl mx-auto px-4 py-8 relative">
       {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 h-0.5 bg-border z-50">
-        <div className="h-full bg-accent2 transition-all duration-150" style={{ width: `${readProgress}%` }} />
+      <div className="fixed top-0 left-0 right-0 h-1 bg-surface z-[100]">
+        <div className="h-full grad-accent transition-all duration-300 shadow-[0_0_10px_rgba(233,69,96,0.5)]" style={{ width: `${readProgress}%` }} />
       </div>
 
-      {/* Back */}
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted hover:text-text text-sm mb-5 transition-colors">
-        <ArrowLeft size={16} /> Back to Feed
+      {/* Navigation */}
+      <button onClick={() => navigate(-1)} className="group flex items-center gap-2 text-muted hover:text-accent2 text-xs font-black uppercase tracking-[0.2em] mb-8 transition-all">
+        <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Back
       </button>
 
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className={`badge border ${DIFF_COLORS[doc.difficulty]}`}>{doc.difficulty}</span>
-          <span className="badge bg-surface border border-border text-muted">{doc.category}</span>
-          {doc.is_ai_generated && <span className="badge bg-accent/10 text-accent border border-accent/20">AI Generated</span>}
-          <span className="flex items-center gap-1 text-xs text-muted ml-auto">
-            <Clock size={12} /> {doc.read_time_minutes} min read
+      {/* Header Section */}
+      <div className="mb-10 animate-slide-up">
+        <div className="flex flex-wrap items-center gap-3 mb-6 relative z-10">
+          <span className={`badge border-2 shadow-sm ${DIFF_COLORS[doc.difficulty] || DIFF_COLORS.Medium}`}>
+            {doc.difficulty}
+          </span>
+          <span className="badge bg-surface/50 border border-border/30 backdrop-blur-sm text-accent2">{doc.category}</span>
+          {doc.is_ai_generated && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent border border-accent/20">
+              <Bot size={12} /> AI Assisted
+            </div>
+          )}
+          <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted ml-auto bg-surface/30 px-2 py-1 rounded-lg border border-border/20">
+            <Clock size={12} className="text-accent2" /> {doc.read_time_minutes}m read
           </span>
         </div>
 
-        <h1 className="text-2xl font-bold text-bright leading-tight mb-3">{doc.title}</h1>
+        <h1 className="text-4xl font-black text-bright leading-tight mb-6 tracking-tight group">
+          {doc.title}
+        </h1>
 
         {doc.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {doc.tags.map(t => <span key={t} className="tag">#{t}</span>)}
+          <div className="flex flex-wrap gap-2 mb-8">
+            {doc.tags.map(t => <span key={t} className="tag text-[11px] font-bold">#{t}</span>)}
           </div>
         )}
 
         {/* Action buttons */}
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 mb-10 pt-6 border-t border-border/30">
           <button onClick={handleBookmark}
-            className={`flex items-center justify-center gap-2 text-sm px-4 py-2.5 rounded-xl border transition-all ${
-              bookmarked ? 'border-accent2 text-accent2 bg-accent2/5' : 'border-border text-muted hover:border-accent2 hover:text-accent2'
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border transition-all duration-300 hover-lift ${
+              bookmarked ? 'border-accent2 text-accent2 bg-accent2/10' : 'border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30'
             }`}>
-            <Bookmark size={15} fill={bookmarked ? 'currentColor' : 'none'} />
+            <Bookmark size={16} fill={bookmarked ? 'currentColor' : 'none'} />
             {bookmarked ? 'Saved' : 'Save'}
           </button>
+          
           <button onClick={handleAddRevision}
-            className="flex items-center justify-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-border text-muted hover:border-yellow-400 hover:text-yellow-400 transition-all">
-            <RotateCcw size={15} /> Revise
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border border-border/60 text-muted hover:border-yellow-400/50 hover:text-yellow-400 bg-surface/30 transition-all duration-300 hover-lift">
+            <RotateCcw size={16} /> Revise
           </button>
+          
           <button onClick={() => setShowNoteInput(!showNoteInput)}
-            className="flex items-center justify-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-border text-muted hover:border-accent hover:text-accent transition-all">
-            <StickyNote size={15} /> Add Note
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border transition-all duration-300 hover-lift ${
+              showNoteInput ? 'border-accent text-accent bg-accent/10' : 'border-border/60 text-muted hover:border-accent/50 hover:text-bright bg-surface/30'
+            }`}>
+            <StickyNote size={16} /> Note
           </button>
+          
           <button onClick={() => navigate(`/ai?topic=${encodeURIComponent(doc.title)}`)}
-            className="flex items-center justify-center gap-2 text-sm px-4 py-2.5 rounded-xl border border-border text-muted hover:border-accent2 hover:text-accent2 transition-all">
-            <Bot size={15} /> Ask AI
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30 transition-all duration-300 hover-lift">
+            <Bot size={16} /> Think Deep
           </button>
         </div>
 
-        {/* Note input */}
+        {/* Note input area */}
         {showNoteInput && (
-          <div className="mt-3 card animate-fade-in">
+          <div className="mb-10 card !p-5 border-accent/20 bg-accent/5 animate-slide-up shadow-2xl relative z-10">
+            <div className="flex items-center gap-2 mb-3 text-accent text-[10px] font-black uppercase tracking-widest">
+              <StickyNote size={14} /> Local Brain Extension
+            </div>
             <textarea
-              className="input resize-none h-20 mb-2"
-              placeholder="Your personal note or important takeaway..."
+              className="w-full bg-bg/50 border border-accent/20 rounded-2xl p-4 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent/40 transition-all resize-none h-28"
+              placeholder="What did you discover in this concept? Write down your key takeaway..."
               value={note}
               onChange={e => setNote(e.target.value)}
             />
-            <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowNoteInput(false)} className="btn-ghost text-xs py-1.5">Cancel</button>
-              <button onClick={handleAddNote} className="btn-primary text-xs py-1.5">Save Note</button>
+            <div className="flex gap-2 justify-end mt-4">
+              <button onClick={() => setShowNoteInput(false)} className="btn-ghost !px-6 !py-2 text-[10px] font-black uppercase">Forget</button>
+              <button onClick={handleAddNote} className="btn-primary !px-8 !py-2 text-[10px] font-black uppercase">Store Note</button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-surface rounded-xl p-1 mb-6">
+      {/* Tab Interface */}
+      <div className="flex gap-1.5 bg-surface/40 backdrop-blur-sm rounded-3xl p-1.5 mb-10 border border-border/20 shadow-inner">
         {[
-          { key: 'read', label: 'Read' },
-          { key: 'quiz', label: 'Quiz' },
-          { key: 'flashcards', label: 'Flashcards' },
+          { key: 'read', label: 'Knowledge Base', icon: Zap },
+          { key: 'quiz', label: 'Recall Test', icon: CheckCircle },
+          { key: 'flashcards', label: 'Active Recall', icon: RotateCcw },
         ].map(t => (
           <button
             key={t.key}
@@ -219,176 +241,185 @@ export default function DocPage() {
               if (t.key === 'quiz' && !quiz) loadQuiz()
               if (t.key === 'flashcards' && !flashcards) loadFlashcards()
             }}
-            className={`flex-1 text-sm py-2 rounded-lg font-medium transition-colors ${
-              tab === t.key ? 'bg-card text-bright shadow' : 'text-muted hover:text-text'
+            className={`flex-1 flex items-center justify-center gap-2.5 text-[11px] font-black uppercase tracking-widest py-3 rounded-2xl transition-all duration-300 ${
+              tab === t.key 
+                ? 'bg-card text-accent2 shadow-lg shadow-black/20 border border-border/50' 
+                : 'text-muted hover:text-bright hover:bg-surface/60'
             }`}
           >
-            {t.label}
+            <t.icon size={14} />
+            <span className="hidden sm:inline">{t.label}</span>
+            <span className="sm:hidden">{t.label.split(' ')[0]}</span>
           </button>
         ))}
       </div>
 
-      {/* AI Model Toggle for Quiz/Flashcards */}
-      {tab !== 'read' && (
-        <div className="flex items-center justify-between mb-4 px-1">
-          <div className="text-xs font-semibold text-muted uppercase tracking-wider">AI Provider</div>
-          <div className="flex bg-border/20 p-1 rounded-xl border border-border/30">
-            <button 
-              onClick={() => {
-                setModelChoice('gemini')
-                if (tab === 'quiz') loadQuiz('gemini')
-                else if (tab === 'flashcards') loadFlashcards('gemini')
-              }}
-              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'gemini' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
-            >
-              Gemini
-            </button>
-            <button 
-              onClick={() => {
-                setModelChoice('openai')
-                if (tab === 'quiz') loadQuiz('openai')
-                else if (tab === 'flashcards') loadFlashcards('openai')
-              }}
-              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'openai' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
-            >
-              OpenAI
-            </button>
+      {/* Tab Content Rendering */}
+      <div className="min-h-[50vh] pb-12">
+        {tab === 'read' && (
+          <div ref={contentRef} className="animate-fade-in relative z-10">
+            <div className="prose-dark max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                {doc.content}
+              </ReactMarkdown>
+            </div>
+
+            {/* In-Context Notes Display */}
+            {doc.personal_notes?.length > 0 && (
+              <div className="mt-16 card border-yellow-400/20 bg-yellow-400/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 grad-accent opacity-5 -translate-y-1/2 translate-x-1/2 rounded-full blur-2xl" />
+                <h3 className="text-xs font-black uppercase tracking-widest text-yellow-400 mb-6 flex items-center gap-2">
+                  <StickyNote size={14} /> Personal Annotations
+                </h3>
+                <div className="space-y-4">
+                  {doc.personal_notes.map((n, i) => (
+                    <div key={i} className="text-sm text-text/90 border-l-4 border-yellow-400/30 pl-6 py-1 leading-relaxed italic bg-surface/30 rounded-r-xl">
+                      {n.note}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Read tab */}
-      {tab === 'read' && (
-        <div ref={contentRef} className="prose-dark animate-fade-in">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-            {doc.content}
-          </ReactMarkdown>
-
-          {/* Personal notes */}
-          {doc.personal_notes?.length > 0 && (
-            <div className="mt-8 card border-yellow-400/20 bg-yellow-400/5">
-              <h3 className="text-sm font-semibold text-yellow-400 mb-3 flex items-center gap-2">
-                <StickyNote size={14} /> Your Notes
-              </h3>
-              <div className="space-y-2">
-                {doc.personal_notes.map((n, i) => (
-                  <div key={i} className="text-sm text-muted border-l-2 border-yellow-400/40 pl-3">
-                    {n.note}
+        {tab === 'quiz' && (
+          <div className="animate-slide-up max-w-2xl mx-auto">
+            {quizLoading ? (
+              <div className="text-center py-24 flex flex-col items-center">
+                 <div className="w-12 h-12 border-4 border-accent2/20 border-t-accent2 rounded-full animate-spin mb-6" />
+                 <div className="text-bright font-black uppercase tracking-widest text-xs">AI Architecting Quiz...</div>
+              </div>
+            ) : quiz ? (
+              <div className="space-y-6">
+                {quiz.map((q, qi) => (
+                  <div key={qi} className="card !p-6 border-border/40 hover:border-accent2/30 transition-all group">
+                    <p className="font-bold text-bright mb-6 flex items-start gap-4">
+                       <span className="w-6 h-6 rounded-lg bg-surface flex items-center justify-center text-[10px] font-black text-accent2 border border-border/60">{qi + 1}</span>
+                       <span className="text-lg leading-snug">{q.question}</span>
+                    </p>
+                    <div className="space-y-3 pl-10">
+                      {q.options.map((opt, oi) => {
+                        const answered = quizAnswers[qi] !== undefined
+                        const isCorrect = oi === q.correct
+                        const isSelected = quizAnswers[qi] === oi
+                        return (
+                          <button
+                            key={oi}
+                            disabled={answered}
+                            onClick={() => setQuizAnswers({ ...quizAnswers, [qi]: oi })}
+                            className={`w-full text-left text-sm px-5 py-3.5 rounded-2xl border-2 transition-all duration-300 font-medium ${
+                              answered
+                                ? isCorrect
+                                  ? 'border-green-400 bg-green-400/10 text-green-400'
+                                  : isSelected
+                                    ? 'border-red-400 bg-red-400/10 text-red-400'
+                                    : 'border-border/30 text-muted opacity-50'
+                                : 'border-border/60 text-text hover:border-accent2 hover:bg-card/40'
+                            }`}
+                          >
+                            <span className="font-black mr-3">{String.fromCharCode(65 + oi)}</span>
+                            {opt}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {quizAnswers[qi] !== undefined && (
+                      <div className="mt-8 text-xs leading-relaxed text-muted bg-surface/50 rounded-2xl p-5 border border-border/30 shadow-inner">
+                        <div className="flex items-center gap-2 mb-2 text-accent2 font-bold uppercase tracking-widest">
+                           <Zap size={14} /> Explanation
+                        </div>
+                        {q.explanation}
+                      </div>
+                    )}
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Quiz tab */}
-      {tab === 'quiz' && (
-        <div className="animate-fade-in">
-          {quizLoading ? (
-            <div className="text-center py-12 text-muted">
-              <div className="w-8 h-8 border-2 border-border border-t-accent2 rounded-full animate-spin mx-auto mb-3" />
-              Generating quiz with AI...
-            </div>
-          ) : quiz ? (
-            <div className="space-y-5">
-              {quiz.map((q, qi) => (
-                <div key={qi} className="card">
-                  <p className="font-medium text-bright mb-3">{qi + 1}. {q.question}</p>
-                  <div className="space-y-2">
-                    {q.options.map((opt, oi) => {
-                      const answered = quizAnswers[qi] !== undefined
-                      const isCorrect = oi === q.correct
-                      const isSelected = quizAnswers[qi] === oi
-                      return (
-                        <button
-                          key={oi}
-                          disabled={answered}
-                          onClick={() => setQuizAnswers({ ...quizAnswers, [qi]: oi })}
-                          className={`w-full text-left text-sm px-4 py-2.5 rounded-lg border transition-colors ${
-                            answered
-                              ? isCorrect
-                                ? 'border-green-400 bg-green-400/10 text-green-400'
-                                : isSelected
-                                  ? 'border-red-400 bg-red-400/10 text-red-400'
-                                  : 'border-border text-muted'
-                              : 'border-border text-text hover:border-accent2'
-                          }`}
-                        >
-                          {String.fromCharCode(65 + oi)}. {opt}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {quizAnswers[qi] !== undefined && (
-                    <div className="mt-3 text-xs text-muted bg-surface rounded-lg p-3">
-                      💡 {q.explanation}
+                
+                {Object.keys(quizAnswers).length === quiz.length && (
+                  <div className="card text-center !p-10 border-accent2/20 bg-accent2/5 animate-slide-up">
+                    <div className="text-4xl mb-4">🏆</div>
+                    <h3 className="text-bright font-black text-2xl mb-2">Quiz Finished!</h3>
+                    <div className="text-4xl font-black text-accent2 mb-6">
+                       {Object.entries(quizAnswers).filter(([qi, oi]) => oi === quiz[qi]?.correct).length} / {quiz.length}
                     </div>
-                  )}
-                </div>
-              ))}
-              <div className="text-center text-sm text-muted">
-                Score: {Object.entries(quizAnswers).filter(([qi, oi]) => oi === quiz[qi]?.correct).length} / {quiz.length}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      )}
-
-      {/* Flashcards tab */}
-      {tab === 'flashcards' && (
-        <div className="animate-fade-in">
-          {flashLoading ? (
-            <div className="text-center py-12 text-muted">
-              <div className="w-8 h-8 border-2 border-border border-t-accent2 rounded-full animate-spin mx-auto mb-3" />
-              Generating flashcards...
-            </div>
-          ) : flashcards ? (
-            <div>
-              <div className="text-center text-sm text-muted mb-4">
-                {flashcardIdx + 1} / {flashcards.length} — Click card to flip
-              </div>
-              <div
-                className="card cursor-pointer min-h-48 flex items-center justify-center text-center p-8 select-none hover:border-accent2/40 transition-colors"
-                onClick={() => setFlashcardFlipped(!flashcardFlipped)}
-              >
-                {!flashcardFlipped ? (
-                  <div>
-                    <div className="text-xs font-medium text-accent2 mb-3 uppercase tracking-wider">Concept</div>
-                    <p className="text-bright font-semibold text-lg">{flashcards[flashcardIdx]?.front}</p>
-                    <p className="text-muted text-xs mt-4">Click to reveal answer</p>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-xs font-medium text-accent mb-3 uppercase tracking-wider">Answer</div>
-                    <p className="text-text leading-relaxed">{flashcards[flashcardIdx]?.back}</p>
+                    <button onClick={() => setQuizAnswers({})} className="btn-primary mx-auto">Try Again</button>
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-center gap-4 mt-4">
-                <button
-                  disabled={flashcardIdx === 0}
-                  onClick={() => { setFlashcardIdx(flashcardIdx - 1); setFlashcardFlipped(false) }}
-                  className="btn-ghost disabled:opacity-30"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  onClick={() => setFlashcardFlipped(false)}
-                  className="text-xs text-muted hover:text-text"
-                >Reset</button>
-                <button
-                  disabled={flashcardIdx === flashcards.length - 1}
-                  onClick={() => { setFlashcardIdx(flashcardIdx + 1); setFlashcardFlipped(false) }}
-                  className="btn-ghost disabled:opacity-30"
-                >
-                  <ChevronRight size={16} />
-                </button>
+            ) : null}
+          </div>
+        )}
+
+        {tab === 'flashcards' && (
+          <div className="animate-slide-up max-w-xl mx-auto">
+            {flashLoading ? (
+              <div className="text-center py-24 flex flex-col items-center">
+                 <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin mb-6" />
+                 <div className="text-bright font-black uppercase tracking-widest text-xs">AI Crafting Flashcards...</div>
               </div>
-            </div>
-          ) : null}
-        </div>
-      )}
+            ) : flashcards ? (
+              <div className="relative">
+                <div className="flex items-center justify-between mb-6 px-1">
+                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">Active Recall Mode</span>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-accent">
+                      {flashcardIdx + 1} <span className="text-muted">/</span> {flashcards.length}
+                   </span>
+                </div>
+                
+                <div
+                  className={`card cursor-pointer min-h-[320px] flex items-center justify-center text-center p-12 select-none hover:border-accent2/40 transition-all duration-500 shadow-2xl relative overflow-hidden group ${flashcardFlipped ? 'rotate-y-180' : ''}`}
+                  onClick={() => setFlashcardFlipped(!flashcardFlipped)}
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 grad-accent opacity-5 -translate-y-1/2 translate-x-1/2 rounded-full blur-2xl group-hover:opacity-10 transition-opacity" />
+                  
+                  {!flashcardFlipped ? (
+                    <div className="animate-fade-in flex flex-col items-center">
+                      <div className="w-10 h-10 rounded-xl bg-accent2/10 flex items-center justify-center mb-6 border border-accent2/20">
+                         <Zap size={20} className="text-accent2" />
+                      </div>
+                      <p className="text-bright font-black text-2xl leading-tight mb-8">{flashcards[flashcardIdx]?.front}</p>
+                      <div className="px-4 py-2 rounded-full bg-surface/50 border border-border/40 text-[10px] font-black uppercase tracking-widest text-muted group-hover:text-accent2 transition-colors">
+                         Click to reveal essence
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="animate-fade-in flex flex-col items-center">
+                      <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center mb-6 border border-accent/20">
+                         <Bot size={20} className="text-accent" />
+                      </div>
+                      <p className="text-text leading-relaxed text-lg font-medium">{flashcards[flashcardIdx]?.back}</p>
+                      <div className="mt-8 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-black uppercase tracking-widest text-accent">
+                         Knowledge Unlocked
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-center gap-6 mt-10">
+                  <button
+                    disabled={flashcardIdx === 0}
+                    onClick={() => { setFlashcardIdx(flashcardIdx - 1); setFlashcardFlipped(false) }}
+                    className="btn-icon !p-4 !rounded-2xl border-border/40 hover:border-accent2/40 bg-surface/30 disabled:opacity-20"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button
+                    onClick={() => setFlashcardFlipped(false)}
+                    className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-bright transition-colors"
+                  >Reset Orientation</button>
+                  <button
+                    disabled={flashcardIdx === flashcards.length - 1}
+                    onClick={() => { setFlashcardIdx(flashcardIdx + 1); setFlashcardFlipped(false) }}
+                    className="btn-icon !p-4 !rounded-2xl border-border/40 hover:border-accent2/40 bg-surface/30 disabled:opacity-20"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
