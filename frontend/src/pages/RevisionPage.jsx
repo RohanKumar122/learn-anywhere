@@ -148,7 +148,7 @@ export default function RevisionPage() {
                     Open Full Document
                   </button>
                   <button
-                    onClick={() => navigate(`/ai?topic=${encodeURIComponent(current.title)}`)}
+                    onClick={() => navigate(`/ai?topic=${encodeURIComponent(current.title)}&doc_id=${current.id}`)}
                     className="btn-ghost !py-3 border-accent2/30 text-accent2"
                   >
                     Ask AI for Summary

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { feedAPI, docsAPI } from '../api'
 import { useAppStore } from '../store'
-import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot } from 'lucide-react'
+import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X } from 'lucide-react'
 import { useAuthStore } from '../store'
 import toast from 'react-hot-toast'
 
@@ -24,12 +24,129 @@ const CAT_COLORS = {
   Other: 'text-gray-400 bg-gray-400/10',
 }
 
-function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete }) {
+const TEMPLATE = `# Your Title Here
+
+## Introduction
+Brief intro to the concept.
+
+## Key Takeaway
+One-liner summary.
+`
+
+function DocEditorModal({ editId, onClose, onSave }) {
+  const [form, setForm] = useState({
+    title: '',
+    content: TEMPLATE,
+    summary: '',
+    category: 'DSA',
+    difficulty: 'Medium',
+    tags: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(false)
+
+  useEffect(() => {
+    if (editId) loadDoc()
+  }, [editId])
+
+  const loadDoc = async () => {
+    setFetching(true)
+    try {
+      const { data } = await docsAPI.get(editId)
+      setForm({ ...data, tags: data.tags?.join(', ') || '' })
+    } catch { toast.error('Failed to load') }
+    finally { setFetching(false) }
+  }
+
+  const handleSave = async () => {
+    if (!form.title.trim()) { toast.error('Title required'); return }
+    setLoading(true)
+    try {
+      const docData = {
+        ...form,
+        tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+      }
+      await onSave(editId, docData)
+      toast.success(editId ? 'Doc updated' : 'Doc created')
+      onClose()
+    } catch { toast.error('Failed to save') }
+    finally { setLoading(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+      <div className="card w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar animate-slide-up relative">
+        <button onClick={onClose} className="absolute top-4 right-4 btn-icon z-10"><X size={18} /></button>
+        
+        <div className="mb-6">
+          <h2 className="text-2xl font-black text-bright tracking-tight">{editId ? 'Edit Knowledge' : 'Architect New Doc'}</h2>
+          <p className="text-muted text-xs font-medium uppercase tracking-widest mt-1">Directly from your feed context</p>
+        </div>
+
+        {fetching ? (
+          <div className="py-20 flex flex-col items-center">
+            <div className="w-10 h-10 border-4 border-accent2/20 border-t-accent2 rounded-full animate-spin mb-4" />
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-1.5 block">Title</label>
+                <input className="input !bg-surface/30" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-1.5 block">Category</label>
+                <select className="input !bg-surface/30" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                   {['DSA', 'System Design', 'OS', 'DBMS', 'CN', 'Other'].map(c => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-1.5 block">Difficulty</label>
+                <select className="input !bg-surface/30" value={form.difficulty} onChange={e => setForm({ ...form, difficulty: e.target.value })}>
+                   {['Easy', 'Medium', 'Hard'].map(d => <option key={d}>{d}</option>)}
+                </select>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-1.5 block">Tags (comma-separated)</label>
+                <input className="input !bg-surface/30" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-1.5 block">Feed Summary</label>
+                <input className="input !bg-surface/30" value={form.summary} onChange={e => setForm({ ...form, summary: e.target.value })} />
+              </div>
+            </div>
+            
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-1.5 block">Content (Markdown)</label>
+              <textarea 
+                className="input !bg-surface/30 min-h-[200px] font-mono text-sm leading-relaxed" 
+                value={form.content} 
+                onChange={e => setForm({ ...form, content: e.target.value })}
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end pt-4 border-t border-border/20">
+              <button onClick={onClose} className="btn-ghost !px-6">Cancel</button>
+              <button onClick={handleSave} disabled={loading} className="btn-primary !px-8">
+                {loading && <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin mr-2" />}
+                Save Knowledge
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit, onSave }) {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const [bookmarked, setBookmarked] = useState(doc.is_bookmarked)
   const [inRevision, setInRevision] = useState(false)
   const [isRead, setIsRead] = useState(doc.is_read)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editForm, setEditForm] = useState({ title: doc.title, summary: doc.summary || '' })
   const isOwner = user?.id === doc.owner_id
 
   const handleBookmark = async (e) => {
@@ -68,22 +185,33 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete }) {
     } catch { toast.error('Failed to delete') }
   }
 
-  const handleEdit = (e) => {
+  const handleEditToggle = (e) => {
     e.stopPropagation()
-    navigate(`/create?edit=${doc.id}`)
+    setIsEditing(!isEditing)
+  }
+
+  const handleSaveInline = async (e) => {
+    e.stopPropagation()
+    try {
+      await onSave(doc.id, { ...doc, ...editForm })
+      setIsEditing(false)
+      toast.success('Updated in-place')
+    } catch { toast.error('Update failed') }
   }
 
   const handleAskAI = (e) => {
     e.stopPropagation()
-    navigate(`/ai?topic=${encodeURIComponent(doc.title)}`)
+    navigate(`/ai?topic=${encodeURIComponent(doc.title)}&doc_id=${doc.id}`)
   }
 
   return (
     <div
-      className="feed-card card hover-lift cursor-pointer group relative overflow-hidden flex flex-col"
-      onClick={() => navigate(`/docs/${doc.id}`)}
+      className={`feed-card card group relative overflow-hidden flex flex-col transition-all duration-300 ${
+        isEditing ? 'border-accent2 ring-4 ring-accent2/5' : 'hover-lift'
+      }`}
+      onClick={() => !isEditing && navigate(`/docs/${doc.id}`)}
     >
-      {/* Glow Effect on Hover */}
+      {/* Glow Effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-accent2/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       {/* Top row */}
@@ -92,35 +220,62 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete }) {
           <span className={`badge border-2 shadow-sm ${DIFF_COLORS[doc.difficulty] || DIFF_COLORS.Medium}`}>
             {doc.difficulty}
           </span>
-          <span className={`badge bg-surface/50 border border-border/30 backdrop-blur-sm ${CAT_COLORS[doc.category] || CAT_COLORS.Other}`}>
-            {doc.category}
-          </span>
-          {doc.is_ai_generated && (
+          {!isEditing && (
+            <span className={`badge bg-surface/50 border border-border/30 backdrop-blur-sm ${CAT_COLORS[doc.category] || CAT_COLORS.Other}`}>
+              {doc.category}
+            </span>
+          )}
+          {doc.is_ai_generated && !isEditing && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-accent/10 text-accent border border-accent/20">
               <Bot size={10} /> AI
             </div>
           )}
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted bg-surface/30 px-2 py-1 rounded-lg border border-border/20">
-          <Clock size={12} className="text-accent2" />
-          {doc.read_time_minutes}m
-        </div>
+        
+        {isEditing ? (
+           <span className="text-[10px] font-black uppercase tracking-widest text-accent2 animate-pulse">Edit Mode Active</span>
+        ) : (
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted bg-surface/30 px-2 py-1 rounded-lg border border-border/20">
+            <Clock size={12} className="text-accent2" />
+            {doc.read_time_minutes}m
+          </div>
+        )}
       </div>
 
-      {/* Title */}
-      <h3 className="font-bold text-bright text-lg mb-2.5 group-hover:text-accent2 transition-colors duration-300 leading-tight relative z-10">
-        {doc.title}
-      </h3>
-
-      {/* Summary */}
-      {doc.summary && (
-        <p className="text-muted text-sm line-clamp-2 mb-4 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity relative z-10">
-          {doc.summary}
-        </p>
-      )}
+      {/* Content Section */}
+      <div className="relative z-10">
+        {isEditing ? (
+          <div className="space-y-3 mb-4">
+            <input 
+              autoFocus
+              className="w-full bg-surface/50 border-2 border-accent2/30 rounded-xl px-4 py-2 text-bright font-bold focus:border-accent2 focus:outline-none transition-all" 
+              value={editForm.title}
+              onClick={e => e.stopPropagation()}
+              onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+            />
+            <textarea 
+              className="w-full bg-surface/50 border-2 border-border/30 rounded-xl px-4 py-3 text-muted text-sm focus:border-accent2 focus:outline-none transition-all resize-none min-h-[80px]" 
+              value={editForm.summary}
+              onClick={e => e.stopPropagation()}
+              onChange={e => setEditForm({ ...editForm, summary: e.target.value })}
+            />
+          </div>
+        ) : (
+          <>
+            <h3 className="font-bold text-bright text-lg mb-2.5 group-hover:text-accent2 transition-colors duration-300 leading-tight">
+              {doc.title}
+            </h3>
+            {doc.summary && (
+              <p className="text-muted text-sm line-clamp-2 mb-4 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
+                {doc.summary || 'Click to read full content...'}
+              </p>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Tags */}
-      {doc.tags?.length > 0 && (
+      {!isEditing && doc.tags?.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-5 relative z-10">
           {doc.tags.slice(0, 3).map(tag => (
             <span key={tag} className="tag text-[10px]" onClick={e => e.stopPropagation()}>#{tag}</span>
@@ -133,66 +288,77 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete }) {
 
       {/* Actions */}
       <div className="flex items-center gap-1 sm:gap-2 pt-4 border-t border-border/40 mt-auto relative z-10">
-        <button
-          onClick={handleBookmark}
-          className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl transition-all duration-300 ${
-            bookmarked ? 'text-accent2 bg-accent2/10 shadow-inner' : 'text-muted hover:text-accent2 hover:bg-accent2/5'
-          }`}
-        >
-          <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
-          <span className="hidden xs:inline">{bookmarked ? 'Saved' : 'Save'}</span>
-        </button>
-        <button
-          onClick={handleRevision}
-          className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl transition-all duration-300 ${
-            inRevision ? 'text-yellow-400 bg-yellow-400/10 shadow-inner' : 'text-muted hover:text-yellow-400 hover:bg-yellow-400/5'
-          }`}
-        >
-          <RotateCcw size={14} />
-          <span className="hidden xs:inline">Revise</span>
-        </button>
-        {!isRead && (
-          <button
-            onClick={handleMarkRead}
-            className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl text-muted hover:text-green-400 hover:bg-green-400/5 transition-all duration-300"
-          >
-            <CheckCircle size={14} />
-            <span className="hidden xs:inline">Read</span>
-          </button>
-        )}
+        {isEditing ? (
+          <div className="flex items-center gap-2 w-full">
+            <button onClick={handleSaveInline} className="btn-primary flex-1 py-1.5 text-xs">Save Changes</button>
+            <button onClick={(e) => { e.stopPropagation(); onEdit(doc.id); setIsEditing(false) }} 
+                    className="btn-ghost flex-1 py-1.5 text-xs text-accent whitespace-nowrap">Full Editor</button>
+            <button onClick={handleEditToggle} className="btn-ghost flex-1 py-1.5 text-xs">Cancel</button>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={handleBookmark}
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl transition-all duration-300 ${
+                bookmarked ? 'text-accent2 bg-accent2/10 shadow-inner' : 'text-muted hover:text-accent2 hover:bg-accent2/5'
+              }`}
+            >
+              <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
+              <span className="hidden xs:inline">{bookmarked ? 'Saved' : 'Save'}</span>
+            </button>
+            <button
+              onClick={handleRevision}
+              className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl transition-all duration-300 ${
+                inRevision ? 'text-yellow-400 bg-yellow-400/10 shadow-inner' : 'text-muted hover:text-yellow-400 hover:bg-yellow-400/5'
+              }`}
+            >
+              <RotateCcw size={14} />
+              <span className="hidden xs:inline">Revise</span>
+            </button>
+            {!isRead && (
+              <button
+                onClick={handleMarkRead}
+                className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl text-muted hover:text-green-400 hover:bg-green-400/5 transition-all duration-300"
+              >
+                <CheckCircle size={14} />
+                <span className="hidden xs:inline">Read</span>
+              </button>
+            )}
 
-        <div className="ml-auto flex items-center gap-1">
-          <button
-            onClick={handleAskAI}
-            className="p-2 rounded-xl text-muted hover:text-accent2 hover:bg-accent2/10 transition-all duration-300"
-            title="Ask AI about this"
-          >
-            <Bot size={18} />
-          </button>
-          
-          {isOwner && (
-            <div className="flex items-center gap-1 border-l border-border/30 ml-1 pl-1">
+            <div className="ml-auto flex items-center gap-1">
               <button
-                onClick={handleEdit}
-                className="p-2 rounded-xl text-muted hover:text-accent hover:bg-accent/10 transition-all duration-300"
-                title="Edit Card"
+                onClick={handleAskAI}
+                className="p-2 rounded-xl text-muted hover:text-accent2 hover:bg-accent2/10 transition-all duration-300"
+                title="Ask AI about this"
               >
-                <div className="w-4 h-4 flex items-center justify-center text-xs font-bold">✎</div>
+                <Bot size={18} />
               </button>
-              <button
-                onClick={handleDelete}
-                className="p-2 rounded-xl text-muted hover:text-red-400 hover:bg-red-400/10 transition-all duration-300"
-                title="Delete Card"
-              >
-                <Trash2 size={16} />
-              </button>
+              
+              {isOwner && (
+                <div className="flex items-center gap-1 border-l border-border/30 ml-1 pl-1">
+                  <button
+                    onClick={handleEditToggle}
+                    className="p-2 rounded-xl text-muted hover:text-accent hover:bg-accent/10 transition-all duration-300"
+                    title="Edit Card In-Place"
+                  >
+                    <div className="w-4 h-4 flex items-center justify-center text-xs font-bold">✎</div>
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="p-2 rounded-xl text-muted hover:text-red-400 hover:bg-red-400/10 transition-all duration-300"
+                    title="Delete Card"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Done status indicator */}
-      {isRead && (
+      {isRead && !isEditing && (
         <div className="absolute -top-6 -right-6 w-12 h-12 bg-green-500/20 rotate-45 flex items-end justify-center pb-1">
           <CheckCircle size={12} className="text-green-400 -rotate-45" />
         </div>
@@ -210,6 +376,7 @@ export default function FeedPage() {
   
   const [loading, setLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const [editorModal, setEditorModal] = useState({ open: false, id: null })
   const loaderRef = useRef(null)
   const isInitialMount = useRef(true)
 
@@ -237,6 +404,16 @@ export default function FeedPage() {
   const handleDeleteDoc = async (id) => {
     await docsAPI.delete(id)
     setFeed(docs.filter(d => d.id !== id), hasMore, page)
+  }
+
+  const handleSaveDoc = async (editId, docData) => {
+    if (editId) {
+      const { data } = await docsAPI.update(editId, docData)
+      setFeed(docs.map(d => d.id === editId ? data : d), hasMore, page)
+    } else {
+      const { data } = await docsAPI.create(docData)
+      setFeed([data, ...docs], hasMore, page)
+    }
   }
 
   // Reload only if filters change OR if feed is empty
@@ -277,11 +454,18 @@ export default function FeedPage() {
           </div>
           <p className="text-muted text-sm font-medium ml-4">Personalized knowledge stream for your growth</p>
         </div>
-        <button onClick={() => setShowFilters(!showFilters)}
-          className={`btn-ghost rounded-2xl ${showFilters ? 'border-accent2 text-accent2 bg-accent2/10 shadow-lg shadow-accent2/5' : ''}`}>
-          <Filter size={16} />
-          <span className="font-bold">Filter</span>
-        </button>
+        <div className="flex gap-2">
+           <button onClick={() => setEditorModal({ open: true, id: null })}
+             className="btn-primary !rounded-2xl shadow-accent/40">
+             <Plus size={16} />
+             <span className="font-bold">Quick Doc</span>
+           </button>
+           <button onClick={() => setShowFilters(!showFilters)}
+             className={`btn-ghost rounded-2xl ${showFilters ? 'border-accent2 text-accent2 bg-accent2/10 shadow-lg shadow-accent2/5' : ''}`}>
+             <Filter size={16} />
+             <span className="font-bold">Filter</span>
+           </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -336,6 +520,8 @@ export default function FeedPage() {
               onAddRevision={handleRevision}
               onMarkRead={handleMarkRead}
               onDelete={handleDeleteDoc}
+              onEdit={(id) => setEditorModal({ open: true, id })}
+              onSave={handleSaveDoc}
             />
           </div>
         ))}
@@ -396,6 +582,15 @@ export default function FeedPage() {
           </div>
         )}
       </div>
+
+      {/* Inline Editor Modal */}
+      {editorModal.open && (
+         <DocEditorModal 
+           editId={editorModal.id}
+           onClose={() => setEditorModal({ open: false, id: null })}
+           onSave={handleSaveDoc}
+         />
+      )}
     </div>
   )
 }

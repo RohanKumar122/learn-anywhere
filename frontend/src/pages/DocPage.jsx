@@ -201,7 +201,7 @@ export default function DocPage() {
             <StickyNote size={16} /> Note
           </button>
           
-          <button onClick={() => navigate(`/ai?topic=${encodeURIComponent(doc.title)}`)}
+          <button onClick={() => navigate(`/ai?topic=${encodeURIComponent(doc.title)}&doc_id=${id}`)}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30 transition-all duration-300 hover-lift">
             <Bot size={16} /> Think Deep
           </button>

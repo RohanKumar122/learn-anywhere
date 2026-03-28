@@ -109,6 +109,7 @@ export default function AIPage() {
   const sendMessage = async (question = input) => {
     if (!question.trim() || loading) return
     const q = question.trim()
+    const docId = searchParams.get('doc_id')
     setInput('')
     addMessage({ role: 'user', content: q })
     setLoading(true)
@@ -119,6 +120,7 @@ export default function AIPage() {
         history: chatHistory.slice(-10), // Last 10 messages for context
         model_choice: modelChoice,
         mode: aiMode,
+        doc_id: docId
       })
       addMessage({ role: 'assistant', content: data.answer, chat_id: data.chat_id })
     } catch {
@@ -132,6 +134,9 @@ export default function AIPage() {
   const handleSaveDoc = async (docData) => {
     await aiAPI.saveAsDoc(docData)
   }
+
+  const topic = searchParams.get('topic')
+  const docId = searchParams.get('doc_id')
 
   return (
     <div className="flex flex-col h-full">
@@ -220,6 +225,23 @@ export default function AIPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-8 space-y-8 custom-scrollbar">
+        {/* Context indicator */}
+        {(topic || docId) && chatHistory.length > 0 && (
+           <div className="max-w-2xl mx-auto mb-4 animate-fade-in">
+              <div className="flex items-center gap-2 bg-accent2/5 border border-accent2/20 rounded-2xl px-4 py-2 transition-all hover:bg-accent2/10">
+                 <div className="w-2 h-2 rounded-full bg-accent2 animate-pulse" />
+                 <span className="text-[10px] font-black uppercase tracking-widest text-muted">Discussing:</span>
+                 <span className="text-xs font-bold text-accent2 truncate">{topic || 'Context Document'}</span>
+                 <button 
+                   onClick={() => navigate('/ai')} 
+                   className="ml-auto text-[9px] font-black uppercase tracking-widest text-muted hover:text-red-400 transition-colors"
+                 >
+                   Clear Context
+                 </button>
+              </div>
+           </div>
+        )}
+
         {chatHistory.length === 0 && (
           <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-slide-up">
             <div className="w-24 h-24 rounded-[2.5rem] bg-gradient-to-br from-accent/20 to-accent2/20 flex items-center justify-center mb-8 animate-float shadow-2xl relative">

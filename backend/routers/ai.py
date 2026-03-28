@@ -89,21 +89,40 @@ def ask_ai(current_user):
     data = request.json
     db = get_db()
     history = data.get("history", [])
+    question = data.get("question", "")
+    doc_id = data.get("doc_id")
+    
+    # Add document context if it's a specific discussion
+    if doc_id:
+        from bson import ObjectId
+        try:
+            doc = db.docs.find_one({"_id": ObjectId(doc_id)})
+            if doc:
+                # Prepend doc context to the first prompt of the discussion
+                # or always include it if history is empty
+                if not history:
+                    question = f"I want to discuss this document with you.\n\nTITLE: {doc['title']}\nCONTENT: {doc['content']}\n\nMY FIRST QUESTION: {question}"
+                else:
+                    # For ongoing chat, we just remind the AI of the context title
+                    # (actual content is already in earlier history usually, but doesn't hurt to keep context clear)
+                    question = f"(Discussing Doc: {doc['title']})\n{question}"
+        except:
+            pass # Invalid ID or db error, proceed without extra context
     
     provider = data.get("model_choice", "gemini").lower()
     mode = data.get("mode", "cs").lower()
     
     if provider == "openai" and settings.OPENAI_API_KEY:
-        answer = call_openai(data.get("question"), history, mode)
+        answer = call_openai(question, history, mode)
         provider = "openai"
     elif settings.GEMINI_API_KEY:
-        answer = call_gemini(data.get("question"), history, mode)
+        answer = call_gemini(question, history, mode)
         provider = "gemini"
     elif settings.OPENAI_API_KEY:
-        answer = call_openai(data.get("question"), history, mode)
+        answer = call_openai(question, history, mode)
         provider = "openai"
     else:
-        answer = generate_fallback_answer(data.get("question"))
+        answer = generate_fallback_answer(question)
         provider = "fallback"
     
     chat_entry = {
