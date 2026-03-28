@@ -8,7 +8,7 @@ import json
 
 ai_bp = Blueprint('ai', __name__)
 
-def call_gemini(prompt: str, history: list = []) -> str:
+def call_gemini(prompt: str, history: list = [], mode: str = "cs") -> str:
     if not settings.GEMINI_API_KEY:
         return "⚠️ Gemini API key not configured. Add GEMINI_API_KEY to your .env file."
     
@@ -23,7 +23,10 @@ def call_gemini(prompt: str, history: list = []) -> str:
         })
     contents.append({"role": "user", "parts": [{"text": prompt}]})
     
-    system_prompt = """You are ConceptFlow AI — an expert CS tutor specializing in DSA, System Design, OS, DBMS, and Networking.
+    if mode == "general":
+        system_prompt = "You are a helpful, versatile AI assistant. Answer any questions accurately and clearly in clean Markdown."
+    else:
+        system_prompt = """You are ConceptFlow AI — an expert CS tutor specializing in DSA, System Design, OS, DBMS, and Networking.
 
 Your style:
 - Clear, structured markdown responses
@@ -54,12 +57,17 @@ Format your response in clean Markdown."""
         
         return data["candidates"][0]["content"]["parts"][0]["text"]
 
-def call_openai(prompt: str, history: list = []) -> str:
+def call_openai(prompt: str, history: list = [], mode: str = "cs") -> str:
     if not settings.OPENAI_API_KEY:
         return "⚠️ OpenAI API key not configured. Add OPENAI_API_KEY to your .env file."
     
+    if mode == "general":
+        system_msg = "You are a helpful, versatile AI assistant. Answer in clean Markdown."
+    else:
+        system_msg = "You are ConceptFlow AI — an expert CS tutor. Answer in clean Markdown with code examples and real-world analogies. Be concise but thorough."
+
     messages = [
-        {"role": "system", "content": "You are ConceptFlow AI — an expert CS tutor. Answer in clean Markdown with code examples and real-world analogies. Be concise but thorough."}
+        {"role": "system", "content": system_msg}
     ]
     for msg in history:
         messages.append({"role": msg["role"], "content": msg["content"]})
@@ -83,15 +91,16 @@ def ask_ai(current_user):
     history = data.get("history", [])
     
     provider = data.get("model_choice", "gemini").lower()
+    mode = data.get("mode", "cs").lower()
     
     if provider == "openai" and settings.OPENAI_API_KEY:
-        answer = call_openai(data.get("question"), history)
+        answer = call_openai(data.get("question"), history, mode)
         provider = "openai"
     elif settings.GEMINI_API_KEY:
-        answer = call_gemini(data.get("question"), history)
+        answer = call_gemini(data.get("question"), history, mode)
         provider = "gemini"
     elif settings.OPENAI_API_KEY:
-        answer = call_openai(data.get("question"), history)
+        answer = call_openai(data.get("question"), history, mode)
         provider = "openai"
     else:
         answer = generate_fallback_answer(data.get("question"))

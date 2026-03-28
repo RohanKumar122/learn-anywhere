@@ -91,7 +91,7 @@ function SaveDocModal({ content, onClose, onSave }) {
 export default function AIPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { chatHistory, addMessage, clearChat, modelChoice, setModelChoice } = useAppStore()
+  const { chatHistory, addMessage, clearChat, modelChoice, setModelChoice, aiMode, setAiMode } = useAppStore()
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [saveModal, setSaveModal] = useState(null) // content to save
@@ -118,6 +118,7 @@ export default function AIPage() {
         question: q,
         history: chatHistory.slice(-10), // Last 10 messages for context
         model_choice: modelChoice,
+        mode: aiMode,
       })
       addMessage({ role: 'assistant', content: data.answer, chat_id: data.chat_id })
     } catch {
@@ -142,25 +143,46 @@ export default function AIPage() {
           </div>
           <div>
             <div className="font-semibold text-bright text-sm leading-tight tracking-tight">ConceptFlow AI</div>
-            <div className="text-[10px] text-accent2 opacity-80 uppercase tracking-wider font-bold">Expert Assistant</div>
+            <div className="text-[10px] text-accent2 opacity-80 uppercase tracking-wider font-bold">
+              {aiMode === 'cs' ? 'Expert Assistant' : 'General Assistant'}
+            </div>
           </div>
         </div>
         
-        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-          <div className="flex bg-border/20 p-1 rounded-xl border border-border/30">
+        <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+          {/* Mode Toggle */}
+          <div className="flex bg-border/20 p-1 rounded-xl border border-border/30 w-full sm:w-auto">
             <button 
-              onClick={() => setModelChoice('gemini')}
-              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'gemini' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
+              onClick={() => setAiMode('cs')}
+              className={`flex-1 sm:flex-initial px-3 py-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${aiMode === 'cs' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
             >
-              Gemini
+              <Sparkles size={10} />
+              CS Expert
             </button>
             <button 
-              onClick={() => setModelChoice('openai')}
-              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'openai' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
+              onClick={() => setAiMode('general')}
+              className={`flex-1 sm:flex-initial px-3 py-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${aiMode === 'general' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
             >
-              OpenAI
+              <Bot size={10} />
+              General
             </button>
           </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex bg-border/20 p-1 rounded-xl border border-border/30 flex-1 sm:flex-initial">
+              <button 
+                onClick={() => setModelChoice('gemini')}
+                className={`flex-1 sm:flex-initial px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'gemini' ? 'bg-accent2 text-white shadow-md' : 'text-muted hover:text-bright'}`}
+              >
+                Gemini
+              </button>
+              <button 
+                onClick={() => setModelChoice('openai')}
+                className={`flex-1 sm:flex-initial px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'openai' ? 'bg-accent2 text-white shadow-md' : 'text-muted hover:text-bright'}`}
+              >
+                OpenAI
+              </button>
+            </div>
 
           {chatHistory.length > 0 && (
             <button onClick={clearChat} className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-red-400 transition-colors">
@@ -176,8 +198,14 @@ export default function AIPage() {
         {chatHistory.length === 0 && (
           <div className="text-center py-10">
             <div className="text-5xl mb-4">🤖</div>
-            <p className="text-bright font-semibold mb-1">Ask me anything about DSA or System Design</p>
-            <p className="text-muted text-sm mb-6">Explanations, examples, interview answers, comparisons — anything</p>
+            <p className="text-bright font-semibold mb-1">
+              {aiMode === 'cs' ? 'Ask me anything about DSA or System Design' : 'Ask me anything — I am here to help'}
+            </p>
+            <p className="text-muted text-sm mb-6">
+              {aiMode === 'cs' 
+                ? 'Explanations, examples, interview answers, comparisons — anything'
+                : 'Knowledge, creativity, coding, or just a friendly chat'}
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto">
               {QUICK_PROMPTS.map(p => (
                 <button
@@ -255,7 +283,7 @@ export default function AIPage() {
         <div className="flex gap-2">
           <textarea
             className="input flex-1 resize-none h-11 py-2.5 leading-relaxed"
-            placeholder="Ask about any DSA or System Design concept..."
+            placeholder={aiMode === 'cs' ? "Ask about any DSA or System Design concept..." : "Ask me anything..."}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => {
