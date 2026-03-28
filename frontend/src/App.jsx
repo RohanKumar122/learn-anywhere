@@ -5,6 +5,7 @@ import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import FeedPage from './pages/FeedPage'
+import DiscoveryPage from './pages/DiscoveryPage'
 import DocPage from './pages/DocPage'
 import CreateDocPage from './pages/CreateDocPage'
 import AIPage from './pages/AIPage'
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Navigate to="/feed" replace />} />
           <Route path="feed" element={<FeedPage />} />
+          <Route path="discovery" element={<DiscoveryPage />} />
           <Route path="docs/:id" element={<DocPage />} />
           <Route path="create" element={<CreateDocPage />} />
           <Route path="ai" element={<AIPage />} />

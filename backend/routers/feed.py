@@ -11,6 +11,50 @@ def serialize_doc(doc):
     del doc["_id"]
     return doc
 
+@feed_bp.route("/public", methods=["GET"])
+@login_required
+def get_public_feed(current_user):
+    db = get_db()
+    category = request.args.get("category")
+    difficulty = request.args.get("difficulty")
+    page = int(request.args.get("page", 1))
+    limit = int(request.args.get("limit", 10))
+    
+    user = db.users.find_one({"_id": ObjectId(current_user["id"])})
+    read_ids = user.get("reading_history", [])
+    
+    # Filter ONLY for public documents
+    query = {"is_public": True}
+    if category:
+        query["category"] = category
+    if difficulty:
+        query["difficulty"] = difficulty
+    
+    skip = (page - 1) * limit
+    cursor = db.docs.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    docs = list(cursor)
+    
+    total = db.docs.count_documents(query)
+    bookmark_ids = user.get("bookmarks", [])
+    
+    result = []
+    for d in docs:
+        serialized = serialize_doc(d)
+        serialized["is_bookmarked"] = str(d.get("id", "")) in bookmark_ids or serialized["id"] in bookmark_ids
+        serialized["is_read"] = serialized["id"] in read_ids
+        # Ensure owner_name is present for public docs
+        if "owner_name" not in serialized:
+            owner = db.users.find_one({"_id": ObjectId(d.get("owner_id"))})
+            serialized["owner_name"] = owner.get("name", "Explorer") if owner else "Explorer"
+        result.append(serialized)
+    
+    return jsonify({
+        "feed": result,
+        "total": total,
+        "page": page,
+        "has_more": (page * limit) < total
+    })
+
 @feed_bp.route("/", methods=["GET"])
 @login_required
 def get_feed(current_user):

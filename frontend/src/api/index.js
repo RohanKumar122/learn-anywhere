@@ -22,6 +22,7 @@ export const docsAPI = {
 // Feed
 export const feedAPI = {
   get: (params) => api.get('/feed/', { params }),
+  getPublic: (params) => api.get('/feed/public', { params }),
   categories: () => api.get('/feed/categories'),
   markRead: (id) => api.post(`/feed/${id}/mark-read`),
   addToRevision: (id) => api.post(`/feed/${id}/add-to-revision`),

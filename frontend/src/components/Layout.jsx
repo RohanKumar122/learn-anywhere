@@ -2,16 +2,16 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store'
 import {
   Zap, BookOpen, Bot, RotateCcw, Search, Bookmark,
-  PlusCircle, User, LogOut, Menu, X, Brain, MoreHorizontal
+  PlusCircle, User, LogOut, Menu, X, Brain, MoreHorizontal, Globe
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 
 const NAV = [
   { to: '/feed', icon: Zap, label: 'Feed' },
-  { to: '/ai', icon: Bot, label: 'AI Assistant' },
+  { to: '/discovery', icon: Globe, label: 'Discovery' },
+  { to: '/ai', icon: Bot, label: 'Neural Chat' },
   { to: '/revision', icon: RotateCcw, label: 'Revision' },
-  { to: '/search', icon: Search, label: 'Search' },
   { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
   { to: '/create', icon: PlusCircle, label: 'Create Doc' },
   { to: '/profile', icon: User, label: 'Profile' },
@@ -126,7 +126,7 @@ export default function Layout() {
                 <button onClick={() => setMoreDrawerOpen(false)} className="btn-icon"><X size={20} /></button>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {[NAV[3], NAV[4], NAV[6]].map(({ to, icon: Icon, label }) => (
+                {[NAV[4], NAV[6]].map(({ to, icon: Icon, label }) => (
                   <NavLink
                     key={to}
                     to={to}
@@ -157,9 +157,9 @@ export default function Layout() {
         <nav className="lg:hidden fixed bottom-4 left-4 right-4 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl px-2 py-2 flex items-center justify-around z-50 shadow-2xl">
           {[
             NAV[0], // Feed
-            NAV[1], // AI Assistant
+            NAV[1], // Discovery
+            NAV[2], // Neural Chat
             NAV[5], // Create Doc (Docs)
-            NAV[2], // Revision
           ].map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}

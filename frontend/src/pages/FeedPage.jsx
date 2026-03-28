@@ -248,7 +248,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
       </div>
 
       {/* Content Section */}
-      <div className="relative z-10">
+      <div className="relative z-10 flex-1">
         {isEditing ? (
           <div className="space-y-3 mb-4">
             <input 
@@ -274,6 +274,18 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
               <p className="text-muted text-sm line-clamp-2 mb-4 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
                 {doc.summary || 'Click to read full content...'}
               </p>
+            )}
+            
+            {/* Publisher Name for Public Docs */}
+            {doc.is_public && doc.owner_name && (
+              <div className="flex items-center gap-2 mt-auto pb-4">
+                 <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center text-[8px] font-black text-accent uppercase border border-accent/20">
+                    {doc.owner_name[0]}
+                 </div>
+                 <span className="text-[10px] font-bold text-muted/60 uppercase tracking-widest leading-none">
+                   By <span className="text-accent2/80">{doc.owner_name}</span>
+                 </span>
+              </div>
             )}
           </>
         )}
