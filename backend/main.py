@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from werkzeug.exceptions import HTTPException
 from flask_cors import CORS
 from routers.auth import auth_bp
 from routers.docs import docs_bp
@@ -30,6 +31,13 @@ def root():
 
 # Connect to DB once at module level (Flask idiomatic or via context)
 connect_db()
+
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    # Return JSON instead of HTML for HTTP errors
+    return jsonify({
+        "detail": e.description,
+    }), e.code
 
 if __name__ == "__main__":
     app.run(port=3000, debug=True)
