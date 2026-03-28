@@ -136,63 +136,73 @@ export default function AIPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 sm:py-4 border-b border-border bg-surface/50 gap-3">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center">
-            <Bot size={16} className="text-white" />
-          </div>
-          <div>
-            <div className="font-semibold text-bright text-sm leading-tight tracking-tight">ConceptFlow AI</div>
-            <div className="text-[10px] text-accent2 opacity-80 uppercase tracking-wider font-bold">
-              {aiMode === 'cs' ? 'Expert Assistant' : 'General Assistant'}
+      <div className="flex flex-col border-b border-border bg-surface/50 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border/10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-accent2 flex items-center justify-center shadow-lg shadow-accent/20">
+              <Bot size={16} className="text-white" />
+            </div>
+            <div>
+              <div className="font-bold text-bright text-xs tracking-tight">ConceptFlow AI</div>
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[9px] text-muted font-bold uppercase tracking-widest">
+                  {aiMode === 'cs' ? 'Expert' : 'General'} Mode
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-          {/* Mode Toggle */}
-          <div className="flex bg-border/20 p-1 rounded-xl border border-border/30 w-full sm:w-auto">
-            <button 
-              onClick={() => setAiMode('cs')}
-              className={`flex-1 sm:flex-initial px-3 py-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${aiMode === 'cs' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
-            >
-              <Sparkles size={10} />
-              CS Expert
-            </button>
-            <button 
-              onClick={() => setAiMode('general')}
-              className={`flex-1 sm:flex-initial px-3 py-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${aiMode === 'general' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
-            >
-              <Bot size={10} />
-              General
-            </button>
-          </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <div className="flex bg-border/20 p-1 rounded-xl border border-border/30 flex-1 sm:flex-initial">
-              <button 
-                onClick={() => setModelChoice('gemini')}
-                className={`flex-1 sm:flex-initial px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'gemini' ? 'bg-accent2 text-white shadow-md' : 'text-muted hover:text-bright'}`}
-              >
-                Gemini
-              </button>
-              <button 
-                onClick={() => setModelChoice('openai')}
-                className={`flex-1 sm:flex-initial px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'openai' ? 'bg-accent2 text-white shadow-md' : 'text-muted hover:text-bright'}`}
-              >
-                OpenAI
-              </button>
-            </div>
-
+          <div className="flex items-center gap-2">
             {chatHistory.length > 0 && (
               <button 
                 onClick={clearChat} 
-                className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-red-400 transition-colors"
+                className="p-2 rounded-lg text-muted hover:text-red-400 hover:bg-red-400/5 transition-all"
+                title="Clear Chat"
               >
-                <Trash2 size={13} />
-                <span className="hidden xs:inline">Clear</span>
+                <Trash2 size={16} />
               </button>
             )}
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-2 bg-surface/30">
+          {/* Mode Selection */}
+          <div className="flex items-center bg-bg/50 p-1 rounded-xl border border-border/30">
+            {[
+              { id: 'cs', label: 'CS Expert', icon: Sparkles },
+              { id: 'general', label: 'General AI', icon: Bot },
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setAiMode(id)}
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 ${
+                  aiMode === id ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'
+                }`}
+              >
+                <Icon size={12} />
+                <span className="hidden xs:inline">{label}</span>
+                <span className="xs:hidden">{label.split(' ')[0]}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Model selection */}
+          <div className="flex items-center bg-bg/50 p-1 rounded-xl border border-border/30">
+            {['Gemini', 'OpenAI'].map((model) => {
+              const id = model.toLowerCase();
+              return (
+                <button
+                  key={id}
+                  onClick={() => setModelChoice(id)}
+                  className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 ${
+                    modelChoice === id ? 'bg-accent2 text-white shadow-md' : 'text-muted hover:text-bright'
+                  }`}
+                >
+                  {model}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -200,25 +210,32 @@ export default function AIPage() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {chatHistory.length === 0 && (
-          <div className="text-center py-10">
-            <div className="text-5xl mb-4">🤖</div>
-            <p className="text-bright font-semibold mb-1">
-              {aiMode === 'cs' ? 'Ask me anything about DSA or System Design' : 'Ask me anything — I am here to help'}
-            </p>
-            <p className="text-muted text-sm mb-6">
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-accent/20 to-accent2/20 flex items-center justify-center mb-6 animate-float">
+              <Sparkles size={40} className="text-accent2" />
+            </div>
+            <h2 className="text-2xl font-bold text-bright mb-2 tracking-tight">
+              {aiMode === 'cs' ? 'CS Tutor AI' : 'General Assistant'}
+            </h2>
+            <p className="text-muted text-sm max-w-sm mb-8 leading-relaxed">
               {aiMode === 'cs' 
-                ? 'Explanations, examples, interview answers, comparisons — anything'
-                : 'Knowledge, creativity, coding, or just a friendly chat'}
+                ? 'Master DSA, System Design, and CS fundamentals with expert guidance and real-world analogies.'
+                : 'Your versatile AI companion for brainstorming, learning, writing, or solving daily tasks.'}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto">
-              {QUICK_PROMPTS.map(p => (
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
+              {QUICK_PROMPTS.slice(0, 4).map(p => (
                 <button
                   key={p}
                   onClick={() => sendMessage(p)}
-                  className="text-left text-sm px-3 py-2.5 rounded-lg border border-border text-muted hover:border-accent2 hover:text-accent2 hover:bg-accent2/5 transition-colors"
+                  className="group text-left p-4 rounded-2xl border border-border/40 bg-card/30 hover:border-accent2/50 hover:bg-accent2/5 transition-all duration-300"
                 >
-                  <Sparkles size={12} className="inline mr-1.5 opacity-60" />
-                  {p}
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center group-hover:bg-accent2/20 transition-colors">
+                      <Sparkles size={14} className="text-muted group-hover:text-accent2" />
+                    </div>
+                    <span className="text-sm font-medium text-muted group-hover:text-bright transition-colors">{p}</span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -226,39 +243,40 @@ export default function AIPage() {
         )}
 
         {chatHistory.map((msg, i) => (
-          <div key={i} className={`flex gap-2 sm:gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={i} className={`flex gap-3 sm:gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
             {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent2 flex items-center justify-center flex-shrink-0 mt-1">
-                <Bot size={14} className="text-white" />
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-accent2 flex items-center justify-center flex-shrink-0 mt-1 shadow-md">
+                <Bot size={16} className="text-white" />
               </div>
             )}
-            <div className={`max-w-[88%] sm:max-w-2xl min-w-0 ${msg.role === 'user' ? 'order-first' : ''}`}>
+            <div className={`max-w-[85%] sm:max-w-2xl min-w-0 ${msg.role === 'user' ? 'order-first' : ''}`}>
               {msg.role === 'user' ? (
-                <div className="bg-accent/10 border border-accent/20 rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm text-text">
+                <div className="bg-accent/10 border border-accent/30 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-text shadow-sm">
                   {msg.content}
                 </div>
               ) : (
-                <div className="bg-surface border border-border rounded-2xl rounded-tl-sm px-4 py-3">
-                  <div className="prose-dark text-sm">
+                <div className="bg-surface/80 backdrop-blur-sm border border-border/60 rounded-2xl rounded-tl-sm px-5 py-4 shadow-md">
+                  <div className="prose-dark text-[14px]">
                     <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                       {msg.content}
                     </ReactMarkdown>
                   </div>
                   {/* Save as doc button */}
-                  <div className="mt-3 pt-3 border-t border-border flex gap-2">
+                  <div className="mt-4 pt-3 border-t border-border/30 flex gap-3">
                     <button
                       onClick={() => setSaveModal(msg.content)}
-                      className="flex items-center gap-1.5 text-xs text-muted hover:text-accent2 transition-colors"
+                      className="flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-accent2 transition-all p-1 -m-1"
                     >
-                      <Save size={12} /> Save as Doc
+                      <Save size={13} /> 
+                      <span>Save Discovery</span>
                     </button>
                   </div>
                 </div>
               )}
             </div>
             {msg.role === 'user' && (
-              <div className="w-7 h-7 rounded-lg bg-accent/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <User size={14} className="text-accent" />
+              <div className="w-8 h-8 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <User size={16} className="text-accent" />
               </div>
             )}
           </div>
@@ -282,28 +300,37 @@ export default function AIPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="px-4 py-4 border-t border-border bg-surface/50">
-        <div className="flex gap-2">
+      {/* Input Area */}
+      <div className="p-4 bg-bg/80 backdrop-blur-xl border-t border-border">
+        <div className="max-w-3xl mx-auto relative group">
           <textarea
-            className="input flex-1 resize-none h-11 py-2.5 leading-relaxed"
-            placeholder={aiMode === 'cs' ? "Ask about any DSA or System Design concept..." : "Ask me anything..."}
+            className="w-full bg-surface/50 border border-border/60 hover:border-accent2/30 focus:border-accent2 rounded-2xl pl-4 pr-14 py-4 text-sm resize-none focus:outline-none focus:ring-4 focus:ring-accent2/5 transition-all min-h-[56px] custom-scrollbar"
+            placeholder={aiMode === 'cs' ? "Deep dive into DSA or Systems..." : "What's on your mind?"}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
             }}
             rows={1}
+            style={{ height: 'auto', minHeight: '56px' }}
           />
           <button
             onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            className="btn-primary px-3 flex items-center justify-center disabled:opacity-40"
+            className="absolute right-2 top-2 bottom-2 w-10 btn-primary !p-0 rounded-xl shadow-lg shadow-accent/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-30 disabled:hover:scale-100"
           >
-            <Send size={16} />
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Send size={18} />
+            )}
           </button>
         </div>
-        <p className="text-xs text-muted mt-1.5">Enter to send · Shift+Enter for new line</p>
+        <div className="flex items-center justify-center gap-4 mt-2">
+          <p className="text-[10px] text-muted font-medium uppercase tracking-widest opacity-60">
+            Shift + Enter for new line • Press Enter to Send
+          </p>
+        </div>
       </div>
 
       {/* Save modal */}
