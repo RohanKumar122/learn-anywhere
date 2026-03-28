@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { docsAPI, aiAPI, feedAPI } from '../api'
-import { useAppStore } from '../store'
+import { useAppStore, useAuthStore } from '../store'
 import {
   ArrowLeft, Clock, Bookmark, RotateCcw, Bot, Zap,
   StickyNote, X, ChevronRight, ChevronLeft, CheckCircle
@@ -22,9 +22,11 @@ export default function DocPage() {
   const navigate = useNavigate()
   const [doc, setDoc] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { user } = useAuthStore()
   const { modelChoice, setModelChoice, docsCache, setCachedDoc } = useAppStore()
   const [readProgress, setReadProgress] = useState(0)
   const [bookmarked, setBookmarked] = useState(false)
+  const [isPublic, setIsPublic] = useState(false)
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [note, setNote] = useState('')
   const [searchParams] = useSearchParams()
@@ -69,11 +71,25 @@ export default function DocPage() {
     try {
       const { data } = await docsAPI.get(id)
       setDoc(data)
+      setIsPublic(data.is_public)
+      setBookmarked(data.is_bookmarked)
       setCachedDoc(id, data) // Store in cache
     } catch (err) {
       toast.error('Failed to load document')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleTogglePublic = async () => {
+    const newVal = !isPublic
+    setIsPublic(newVal)
+    try {
+      await docsAPI.update(id, { is_public: newVal })
+      toast.success(newVal ? 'Published to Cosmos!' : 'Archived privately')
+    } catch {
+      setIsPublic(!newVal)
+      toast.error('Failed to update visibility')
     }
   }
 
@@ -168,6 +184,22 @@ export default function DocPage() {
               <Bot size={13} /> AI Assisted
             </div>
           )}
+
+          {/* New Toggle for 상세페이지 top */}
+          {user?.id === doc.owner_id && (
+             <button 
+               onClick={handleTogglePublic}
+               className={`flex items-center gap-2.5 px-4 py-1.5 rounded-xl border transition-all duration-300 active:scale-95 ${
+                 isPublic ? 'bg-accent/10 border-accent text-accent shadow-lg shadow-accent/5' : 'bg-surface/30 border-border/40 text-muted hover:border-accent/40 hover:text-bright'
+               }`}
+             >
+                <div className={`w-8 h-4 rounded-full relative transition-colors ${isPublic ? 'bg-accent/60' : 'bg-border/60'}`}>
+                   <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-transform ${isPublic ? 'translate-x-[1.1rem]' : 'translate-x-0.5'}`} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest">{isPublic ? 'Publicly Visible' : 'Go Public'}</span>
+             </button>
+          )}
+
           <div className="hide-on-mobile flex items-center gap-1.5 text-[11px] font-black text-muted ml-auto bg-surface/40 px-3 py-1.5 rounded-xl border border-border/20">
             <Clock size={13} className="text-accent2" /> {doc.read_time_minutes}m read
           </div>

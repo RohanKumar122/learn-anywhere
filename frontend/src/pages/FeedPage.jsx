@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { feedAPI, docsAPI, aiAPI } from '../api'
 import { useAppStore } from '../store'
-import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X, FileText, Upload, Zap, Calendar } from 'lucide-react'
+import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X, FileText, Upload, Zap, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import * as pdfjs from 'pdfjs-dist'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useAuthStore } from '../store'
@@ -179,15 +179,29 @@ function DocEditorModal({ editId, onClose, onSave, initialContent, initialTitle 
   )
 }
 
-function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit, onSave }) {
+function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit, onSave, editId }) {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const [bookmarked, setBookmarked] = useState(doc.is_bookmarked)
   const [inRevision, setInRevision] = useState(false)
   const [isRead, setIsRead] = useState(doc.is_read)
-  const [isEditing, setIsEditing] = useState(false)
+  const [isPublic, setIsPublic] = useState(doc.is_public)
+  const isEditing = editId === doc.id
   const [editForm, setEditForm] = useState({ title: doc.title, summary: doc.summary || '' })
   const isOwner = user?.id === doc.owner_id
+
+  const handleTogglePublic = async (e) => {
+    e.stopPropagation()
+    const newVal = !isPublic
+    setIsPublic(newVal)
+    try {
+      await docsAPI.update(doc.id, { is_public: newVal })
+      toast.success(newVal ? 'Published to Cosmos!' : 'Archived privately')
+    } catch {
+      setIsPublic(!newVal)
+      toast.error('Failed to update visibility')
+    }
+  }
 
   const handleBookmark = async (e) => {
     e.stopPropagation()
@@ -613,15 +627,11 @@ export default function FeedPage() {
     loadFeed(1, true)
   }, [category, difficulty])
 
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting && hasMore && !loading) loadFeed(page + 1) },
-      { threshold: 0.5 }
-    )
-    if (loaderRef.current) observer.observe(loaderRef.current)
-    return () => observer.disconnect()
-  }, [hasMore, loading, page, loadFeed])
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || loading) return
+    loadFeed(newPage, true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const handleBookmark = (id) => feedAPI.get(id) // placeholder — actual call in card
   const handleRevision = (id) => feedAPI.addToRevision(id)
@@ -729,43 +739,84 @@ export default function FeedPage() {
           </div>
         ))}
 
-        {/* Skeleton loaders */}
-        {loading && Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="card space-y-4 animate-pulse">
-            <div className="flex gap-2">
-              <div className="skeleton h-6 w-20" />
-              <div className="skeleton h-6 w-28" />
-            </div>
-            <div className="skeleton h-7 w-3/4" />
-            <div className="space-y-2">
-              <div className="skeleton h-4 w-full" />
-              <div className="skeleton h-4 w-5/6" />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <div className="skeleton h-8 w-24" />
-              <div className="skeleton h-8 w-24" />
-            </div>
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-center gap-2 mt-12 py-8 border-t border-border/20 relative z-20">
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 1 || loading}
+            className="btn-ghost !p-3 rounded-2xl disabled:opacity-20 border border-border/10 transition-all hover:bg-surface/40 active:scale-90"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-surface/30 rounded-2xl border border-border/10">
+            {Array.from({ length: Math.min(5, Math.ceil(docs.length / 10) + page) }).map((_, i) => {
+               // This is a bit simplified since we don't know total_pages from API, 
+               // but we can show current, prev, and some next pages if hasMore is true
+               const p = page > 2 ? page - 2 + i : i + 1
+               if (p < 1) return null
+               if (p > page && !hasMore) return null
+               
+               return (
+                 <button
+                   key={p}
+                   onClick={() => handlePageChange(p)}
+                   className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
+                     page === p 
+                       ? 'bg-accent2 text-white shadow-lg shadow-accent2/20' 
+                       : 'text-muted hover:text-bright hover:bg-white/5'
+                   }`}
+                 >
+                   {p}
+                 </button>
+               )
+            })}
           </div>
-        ))}
 
-        {/* Loader trigger */}
-        <div ref={loaderRef} className="h-20 flex items-center justify-center">
-          {loading && hasMore && (
-             <div className="w-6 h-6 border-2 border-accent2/30 border-t-accent2 rounded-full animate-spin" />
-          )}
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={!hasMore || loading}
+            className="btn-ghost !p-3 rounded-2xl disabled:opacity-20 border border-border/10 transition-all hover:bg-surface/40 active:scale-90"
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
 
+        {loading && (
+           <div className="flex justify-center py-4">
+              <div className="w-6 h-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+           </div>
+        )}
+
         {!hasMore && docs.length > 0 && (
-          <div className="text-center py-12 border-t border-border/20">
-            <div className="text-3xl mb-3">✨</div>
-            <h3 className="font-bold text-bright mb-1">You're all caught up!</h3>
-            <p className="text-muted text-sm">Create more documents or explore the AI Assistant.</p>
-            <button 
-              onClick={() => navigate('/create')}
-              className="mt-6 btn-primary mx-auto"
-            >
-              Create New Doc
-            </button>
+          <div className="mt-12 p-8 rounded-[2.5rem] bg-surface/30 border border-border/10 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 grad-accent opacity-[0.05] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            
+            <div className="flex flex-col items-center text-center relative z-10">
+               <div className="w-12 h-12 rounded-2xl bg-accent2/10 flex items-center justify-center mb-6 shadow-xl shadow-accent2/5 border border-accent2/20">
+                  <Zap size={24} className="text-accent2 animate-pulse" />
+               </div>
+               <h3 className="text-xl font-black text-bright mb-2 tracking-tight uppercase">Knowledge Architecture Complete</h3>
+               <p className="text-muted/70 text-sm max-w-sm mb-8 leading-relaxed">
+                 You've architected your personalized learning stream for this cycle. Ready to explore the global neural collective?
+               </p>
+               
+               <div className="flex flex-wrap justify-center gap-4">
+                  <button 
+                    onClick={() => navigate('/discovery')}
+                    className="btn-primary !px-8 !rounded-2xl shadow-lg shadow-accent/20 flex items-center gap-2 group/btn"
+                  >
+                    <span>Explore Cosmos</span>
+                    <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+                  </button>
+                  <button 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="btn-ghost !px-8 !rounded-2xl border-white/5 text-muted hover:text-bright"
+                  >
+                    Back to Zenith
+                  </button>
+               </div>
+            </div>
           </div>
         )}
 
