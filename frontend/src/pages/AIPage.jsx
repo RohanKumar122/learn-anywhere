@@ -91,9 +91,8 @@ function SaveDocModal({ content, onClose, onSave }) {
 export default function AIPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { chatHistory, addMessage, clearChat } = useAppStore()
+  const { chatHistory, addMessage, clearChat, modelChoice, setModelChoice } = useAppStore()
   const [input, setInput] = useState('')
-  const [selectedModel, setSelectedModel] = useState('gemini')
   const [loading, setLoading] = useState(false)
   const [saveModal, setSaveModal] = useState(null) // content to save
   const bottomRef = useRef(null)
@@ -118,7 +117,7 @@ export default function AIPage() {
       const { data } = await aiAPI.ask({
         question: q,
         history: chatHistory.slice(-10), // Last 10 messages for context
-        model_choice: selectedModel,
+        model_choice: modelChoice,
       })
       addMessage({ role: 'assistant', content: data.answer, chat_id: data.chat_id })
     } catch {
@@ -150,14 +149,14 @@ export default function AIPage() {
         <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
           <div className="flex bg-border/20 p-1 rounded-xl border border-border/30">
             <button 
-              onClick={() => setSelectedModel('gemini')}
-              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${selectedModel === 'gemini' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
+              onClick={() => setModelChoice('gemini')}
+              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'gemini' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
             >
               Gemini
             </button>
             <button 
-              onClick={() => setSelectedModel('openai')}
-              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${selectedModel === 'openai' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
+              onClick={() => setModelChoice('openai')}
+              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'openai' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
             >
               OpenAI
             </button>

@@ -32,8 +32,8 @@ export const aiAPI = {
   ask: (data) => api.post('/ai/ask', data),
   saveAsDoc: (data) => api.post('/ai/save-as-doc', data),
   chats: () => api.get('/ai/chats'),
-  quiz: (docId) => api.post(`/ai/generate-quiz/${docId}`),
-  flashcards: (docId) => api.post(`/ai/generate-flashcards/${docId}`),
+  quiz: (docId, model_choice) => api.post(`/ai/generate-quiz/${docId}`, null, { params: { model_choice } }),
+  flashcards: (docId, model_choice) => api.post(`/ai/generate-flashcards/${docId}`, null, { params: { model_choice } }),
 }
 
 // Revision

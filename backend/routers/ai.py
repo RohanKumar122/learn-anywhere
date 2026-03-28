@@ -178,7 +178,12 @@ Return ONLY valid JSON array like:
   }}
 ]"""
     
-    if settings.GEMINI_API_KEY:
+    # Respect user model choice
+    provider = request.args.get("model_choice", "gemini").lower()
+    
+    if provider == "openai" and settings.OPENAI_API_KEY:
+        raw = call_openai(prompt)
+    elif settings.GEMINI_API_KEY:
         raw = call_gemini(prompt)
     elif settings.OPENAI_API_KEY:
         raw = call_openai(prompt)
@@ -224,7 +229,11 @@ Content: {doc['content'][:2000]}
 Return ONLY valid JSON array:
 [{{"front": "concept/question", "back": "explanation/answer"}}]"""
     
-    if settings.GEMINI_API_KEY:
+    provider = request.args.get("model_choice", "gemini").lower()
+
+    if provider == "openai" and settings.OPENAI_API_KEY:
+        raw = call_openai(prompt)
+    elif settings.GEMINI_API_KEY:
         raw = call_gemini(prompt)
     elif settings.OPENAI_API_KEY:
         raw = call_openai(prompt)

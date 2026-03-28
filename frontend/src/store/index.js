@@ -33,10 +33,15 @@ export const useAppStore = create((set, get) => ({
   appendFeed: (docs, hasMore, page) => set((s) => ({ feedDocs: [...s.feedDocs, ...docs], feedHasMore: hasMore, feedPage: page })),
   setFeedFilter: (category, difficulty) => set({ feedCategory: category, feedDifficulty: difficulty, feedDocs: [], feedPage: 1, feedHasMore: true }),
 
-  // AI Chat state
+  // AI state
   chatHistory: [],
+  modelChoice: localStorage.getItem('cf_model') || 'gemini',
   addMessage: (msg) => set((s) => ({ chatHistory: [...s.chatHistory, msg] })),
   clearChat: () => set({ chatHistory: [] }),
+  setModelChoice: (m) => {
+    localStorage.setItem('cf_model', m)
+    set({ modelChoice: m })
+  },
 
   // UI state
   sidebarOpen: false,

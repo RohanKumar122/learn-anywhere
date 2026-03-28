@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { docsAPI, aiAPI, feedAPI } from '../api'
+import { useAppStore } from '../store'
 import {
   ArrowLeft, Clock, Bookmark, RotateCcw, Bot, Zap,
   StickyNote, X, ChevronRight, ChevronLeft, CheckCircle
@@ -21,6 +22,7 @@ export default function DocPage() {
   const navigate = useNavigate()
   const [doc, setDoc] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { modelChoice, setModelChoice } = useAppStore()
   const [readProgress, setReadProgress] = useState(0)
   const [bookmarked, setBookmarked] = useState(false)
   const [showNoteInput, setShowNoteInput] = useState(false)
@@ -89,19 +91,19 @@ export default function DocPage() {
     } catch { toast.error('Failed to save note') }
   }
 
-  const loadQuiz = async () => {
+  const loadQuiz = async (model = modelChoice) => {
     setQuizLoading(true)
     try {
-      const { data } = await aiAPI.quiz(id)
+      const { data } = await aiAPI.quiz(id, model)
       setQuiz(data.quiz)
     } catch { toast.error('Failed to generate quiz') }
     finally { setQuizLoading(false) }
   }
 
-  const loadFlashcards = async () => {
+  const loadFlashcards = async (model = modelChoice) => {
     setFlashLoading(true)
     try {
-      const { data } = await aiAPI.flashcards(id)
+      const { data } = await aiAPI.flashcards(id, model)
       setFlashcards(data.flashcards)
     } catch { toast.error('Failed to generate flashcards') }
     finally { setFlashLoading(false) }
@@ -218,6 +220,35 @@ export default function DocPage() {
           </button>
         ))}
       </div>
+
+      {/* AI Model Toggle for Quiz/Flashcards */}
+      {tab !== 'read' && (
+        <div className="flex items-center justify-between mb-4 px-1">
+          <div className="text-xs font-semibold text-muted uppercase tracking-wider">AI Provider</div>
+          <div className="flex bg-border/20 p-1 rounded-xl border border-border/30">
+            <button 
+              onClick={() => {
+                setModelChoice('gemini')
+                if (tab === 'quiz') loadQuiz('gemini')
+                else if (tab === 'flashcards') loadFlashcards('gemini')
+              }}
+              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'gemini' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
+            >
+              Gemini
+            </button>
+            <button 
+              onClick={() => {
+                setModelChoice('openai')
+                if (tab === 'quiz') loadQuiz('openai')
+                else if (tab === 'flashcards') loadFlashcards('openai')
+              }}
+              className={`px-3 py-1 text-[10px] font-bold rounded-lg transition-all ${modelChoice === 'openai' ? 'bg-accent text-white shadow-md' : 'text-muted hover:text-bright'}`}
+            >
+              OpenAI
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Read tab */}
       {tab === 'read' && (
