@@ -90,9 +90,9 @@ export default function Layout() {
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Mobile Header - Sticky and Glassy */}
-        <header className="lg:hidden sticky top-0 flex items-center justify-between px-4 py-3 bg-bg/80 backdrop-blur-xl border-b border-border/50 z-30">
-          <div className="flex items-center gap-2.5">
+        {/* Mobile Header - Relative and Glassy */}
+        <header className="lg:hidden relative z-30 bg-bg/80 backdrop-blur-xl border-b border-border/50 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2.5" onClick={() => navigate('/')}>
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent to-accent2 flex items-center justify-center shadow-lg shadow-accent/20">
               <Brain size={18} className="text-white" />
             </div>

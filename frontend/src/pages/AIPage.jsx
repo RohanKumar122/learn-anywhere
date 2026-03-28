@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { aiAPI } from '../api'
 import { useAppStore } from '../store'
-import { Send, Bot, User, Save, Tag, Trash2, Sparkles, X } from 'lucide-react'
+import { Send, Bot, User, Save, Tag, Trash2, Sparkles, X, Zap } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const QUICK_PROMPTS = [
@@ -135,74 +135,85 @@ export default function AIPage() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
+      {/* AI Controls Header */}
       <div className="flex flex-col border-b border-border/40 bg-bg/80 backdrop-blur-xl sticky top-0 z-20 shadow-xl shadow-black/5">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/10">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl grad-accent flex items-center justify-center shadow-lg shadow-accent/20">
-              <Bot size={20} className="text-white" />
-            </div>
-            <div>
-              <div className="font-black text-bright text-sm tracking-tight">ConceptFlow AI</div>
-              <div className="flex items-center gap-1.5 leading-none mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
-                <span className="text-[9px] text-accent2 font-black uppercase tracking-widest">
-                  {aiMode === 'cs' ? 'Expert CS Tutor' : 'General Intelligence'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {chatHistory.length > 0 && (
-              <button 
-                onClick={clearChat} 
-                className="btn-icon !p-1.5 text-muted hover:text-red-400"
-                title="Clear Session"
-              >
-                <Trash2 size={18} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-surface/20">
-          {/* Mode Selection */}
-          <div className="flex items-center bg-bg/50 p-1.5 rounded-2xl border border-border/40 shadow-inner">
-            {[
-              { id: 'cs', label: 'CS Expert', icon: Sparkles, active: 'bg-accent text-white shadow-lg shadow-accent/20' },
-              { id: 'general', label: 'General AI', icon: Bot, active: 'bg-accent text-white shadow-lg shadow-accent/20' },
-            ].map(({ id, label, icon: Icon, active }) => (
-              <button
-                key={id}
-                onClick={() => setAiMode(id)}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
-                  aiMode === id ? active : 'text-muted hover:text-bright'
-                }`}
-              >
-                <Icon size={14} />
-                <span className="hidden xs:inline">{label}</span>
-                <span className="xs:hidden">{label.split(' ')[0]}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Model selection */}
-          <div className="flex items-center bg-bg/50 p-1.5 rounded-2xl border border-border/40 shadow-inner">
-            {['Gemini', 'OpenAI'].map((model) => {
-              const id = model.toLowerCase();
-              return (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 lg:px-8 max-w-5xl mx-auto w-full">
+          
+          {/* Agent Mode - Mobile Optimized */}
+          <div className="flex flex-col gap-1.5 flex-1">
+             <div className="text-[9px] font-black uppercase tracking-[0.2em] text-accent/60 pl-2">Intelligence Agent</div>
+             <div className="flex bg-surface/30 p-1 rounded-2xl border border-border/30 relative h-10 w-full shadow-inner overflow-hidden">
+                <div 
+                  className="absolute top-1 bottom-1 bg-accent rounded-xl transition-all duration-300 ease-out shadow-lg shadow-accent/10 z-0"
+                  style={{ 
+                    left: aiMode === 'cs' ? '4px' : 'calc(50% + 2px)', 
+                    width: 'calc(50% - 6px)' 
+                  }}
+                />
+                
                 <button
-                  key={id}
-                  onClick={() => setModelChoice(id)}
-                  className={`flex-1 sm:flex-initial px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
-                    modelChoice === id ? 'bg-accent2 text-white shadow-lg shadow-accent2/20' : 'text-muted hover:text-bright'
+                  onClick={() => setAiMode('cs')}
+                  className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                    aiMode === 'cs' ? 'text-white' : 'text-muted hover:text-bright'
                   }`}
                 >
-                  {model}
+                  <Sparkles size={12} />
+                  <span>CS Expert</span>
                 </button>
-              );
-            })}
+                
+                <button
+                  onClick={() => setAiMode('general')}
+                  className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                    aiMode === 'general' ? 'text-white' : 'text-muted hover:text-bright'
+                  }`}
+                >
+                  <Bot size={12} />
+                  <span>General</span>
+                </button>
+             </div>
+          </div>
+
+          {/* Engine Selection - Mobile Optimized */}
+          <div className="flex flex-col gap-1.5 flex-1">
+             <div className="flex items-center justify-between px-2">
+                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-accent2/60">AI Engine</div>
+                {chatHistory.length > 0 && (
+                  <button 
+                    onClick={clearChat} 
+                    className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-muted hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 size={12} /> Clear
+                  </button>
+                )}
+             </div>
+             <div className="flex bg-surface/30 p-1 rounded-2xl border border-border/30 relative h-10 w-full shadow-inner overflow-hidden">
+                <div 
+                  className="absolute top-1 bottom-1 bg-accent2 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-accent2/10 z-0"
+                  style={{ 
+                    left: modelChoice === 'gemini' ? '4px' : 'calc(50% + 2px)', 
+                    width: 'calc(50% - 6px)' 
+                  }}
+                />
+                
+                <button
+                  onClick={() => setModelChoice('gemini')}
+                  className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                    modelChoice === 'gemini' ? 'text-white' : 'text-muted hover:text-bright'
+                  }`}
+                >
+                  {/* Smaller icons or just text */}
+                  <Zap size={10} className="mr-1.5" /> Gemini
+                </button>
+                
+                <button
+                  onClick={() => setModelChoice('openai')}
+                  className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                    modelChoice === 'openai' ? 'text-white' : 'text-muted hover:text-bright'
+                  }`}
+                >
+                  OpenAI
+                </button>
+             </div>
           </div>
         </div>
       </div>
