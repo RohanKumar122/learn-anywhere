@@ -48,6 +48,12 @@ export const useAppStore = create((set, get) => ({
     set({ aiMode: mode })
   },
 
+  // Documents Cache
+  docsCache: {}, // { id: docData }
+  setCachedDoc: (id, doc) => set((s) => ({
+    docsCache: { ...s.docsCache, [id]: doc }
+  })),
+
   // UI state
   sidebarOpen: false,
   setSidebarOpen: (v) => set({ sidebarOpen: v }),

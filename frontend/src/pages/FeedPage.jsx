@@ -142,16 +142,18 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead }) {
 }
 
 export default function FeedPage() {
-  const [docs, setDocs] = useState([])
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
+  const { 
+    feedDocs: docs, feedPage: page, feedHasMore: hasMore, 
+    feedCategory: category, feedDifficulty: difficulty,
+    setFeed, appendFeed, setFeedFilter
+  } = useAppStore()
+  
   const [loading, setLoading] = useState(false)
-  const [category, setCategory] = useState(null)
-  const [difficulty, setDifficulty] = useState(null)
   const [showFilters, setShowFilters] = useState(false)
   const loaderRef = useRef(null)
+  const isInitialMount = useRef(true)
 
-  const loadFeed = useCallback(async (pg = 1, reset = false) => {
+  const loadFeed = useCallback(async (pg = 1, isReset = false) => {
     if (loading) return
     setLoading(true)
     try {
@@ -159,24 +161,29 @@ export default function FeedPage() {
       if (category) params.category = category
       if (difficulty) params.difficulty = difficulty
       const { data } = await feedAPI.get(params)
-      if (reset) {
-        setDocs(data.feed)
+      
+      if (isReset) {
+        setFeed(data.feed, data.has_more, pg)
       } else {
-        setDocs(prev => [...prev, ...data.feed])
+        appendFeed(data.feed, data.has_more, pg)
       }
-      setHasMore(data.has_more)
-      setPage(pg)
     } catch {
       toast.error('Failed to load feed')
     } finally {
       setLoading(false)
     }
-  }, [category, difficulty])
+  }, [category, difficulty, loading, setFeed, appendFeed])
 
+  // Reload only if filters change OR if feed is empty
   useEffect(() => {
-    setDocs([])
-    setPage(1)
-    setHasMore(true)
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      if (docs.length === 0) {
+        loadFeed(1, true)
+      }
+      return
+    }
+    // If we're here, it means category or difficulty changed
     loadFeed(1, true)
   }, [category, difficulty])
 
@@ -218,7 +225,7 @@ export default function FeedPage() {
               {CATEGORIES.map(c => (
                 <button
                   key={c}
-                  onClick={() => setCategory(c === 'All' ? null : c)}
+                  onClick={() => setFeedFilter(c === 'All' ? null : c, difficulty)}
                   className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                     (c === 'All' && !category) || category === c
                       ? 'border-accent2 text-accent2 bg-accent2/10'
@@ -236,7 +243,7 @@ export default function FeedPage() {
               {DIFFICULTIES.map(d => (
                 <button
                   key={d}
-                  onClick={() => setDifficulty(d === 'All' ? null : d)}
+                  onClick={() => setFeedFilter(category, d === 'All' ? null : d)}
                   className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
                     (d === 'All' && !difficulty) || difficulty === d
                       ? 'border-accent text-accent bg-accent/10'

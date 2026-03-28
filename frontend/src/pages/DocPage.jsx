@@ -22,7 +22,7 @@ export default function DocPage() {
   const navigate = useNavigate()
   const [doc, setDoc] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { modelChoice, setModelChoice } = useAppStore()
+  const { modelChoice, setModelChoice, docsCache, setCachedDoc } = useAppStore()
   const [readProgress, setReadProgress] = useState(0)
   const [bookmarked, setBookmarked] = useState(false)
   const [showNoteInput, setShowNoteInput] = useState(false)
@@ -55,10 +55,17 @@ export default function DocPage() {
   }, [doc])
 
   const loadDoc = async () => {
+    // Check cache first
+    if (docsCache[id]) {
+      setDoc(docsCache[id])
+      setLoading(false)
+      return
+    }
+
     try {
-      // Try direct API call with correct URL
       const { data } = await docsAPI.get(id)
       setDoc(data)
+      setCachedDoc(id, data) // Store in cache
     } catch (err) {
       toast.error('Failed to load document')
     } finally {
