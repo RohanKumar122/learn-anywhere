@@ -9,10 +9,12 @@ import json
 ai_bp = Blueprint('ai', __name__)
 
 def call_gemini(prompt: str, history: list = [], mode: str = "cs") -> str:
+    print(f"[AI LOG] Calling Gemini (Prompt length: {len(prompt)})")
     if not settings.GEMINI_API_KEY:
+        print("[AI LOG] ERROR: GEMINI_API_KEY is not configured in settings.")
         return "⚠️ Gemini API key not configured. Add GEMINI_API_KEY to your .env file."
     
-    # The correct model name for Google's API as of 2024+ is gemini-1.5-flash
+    print(f"[AI LOG] Using API Key: {settings.GEMINI_API_KEY[:4]}...{settings.GEMINI_API_KEY[-4:]}")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
     
     contents = []
@@ -23,21 +25,9 @@ def call_gemini(prompt: str, history: list = [], mode: str = "cs") -> str:
         })
     contents.append({"role": "user", "parts": [{"text": prompt}]})
     
-    if mode == "general":
-        system_prompt = "You are a helpful, versatile AI assistant. Answer any questions accurately and clearly in clean Markdown."
-    else:
-        system_prompt = """You are ConceptFlow AI — an expert CS tutor specializing in DSA, System Design, OS, DBMS, and Networking.
-
-Your style:
-- Clear, structured markdown responses
-- Use code blocks for examples
-- Give real-world analogies
-- Include interview tips when relevant
-- Keep explanations concise but complete
-- Use headers to organize long answers
-- Always end with a "Key Takeaway" section for complex topics
-
-Format your response in clean Markdown."""
+    system_prompt = "You are a helpful, versatile AI assistant."
+    if mode == "cs":
+        system_prompt = "You are ConceptFlow AI — an expert CS tutor specializing in DSA and System Design."
 
     payload = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
@@ -45,49 +35,54 @@ Format your response in clean Markdown."""
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2048}
     }
     
-    with httpx.Client(timeout=30) as client:
-        resp = client.post(url, json=payload)
-        if resp.status_code != 200:
-            abort(502, description=f"Gemini API error: {resp.text}")
-        data = resp.json()
-        if not data.get("candidates") or not data["candidates"][0].get("content"):
-            if "error" in data:
-                return f"⚠️ AI Error: {data['error'].get('message', 'Unknown API error')}"
-            return "⚠️ Gemini returned an empty response. This might be due to safety filters."
-        
-        return data["candidates"][0]["content"]["parts"][0]["text"]
+    try:
+        with httpx.Client(timeout=60) as client:
+            print("[AI LOG] Sending request to Gemini...")
+            resp = client.post(url, json=payload)
+            if resp.status_code != 200:
+                print(f"[AI LOG] ERROR: Gemini API returned Status {resp.status_code}")
+                print(f"[AI LOG] BODY: {resp.text}")
+                return f"⚠️ Gemini API error (Status {resp.status_code}): Check terminal logs."
+            data = resp.json()
+            if not data.get("candidates") or not data["candidates"][0].get("content"):
+                print(f"[AI LOG] ERROR: No candidates in Gemini response. Full data: {json.dumps(data)}")
+                return "⚠️ Gemini returned an empty response (likely safety filter)."
+            answer = data["candidates"][0]["content"]["parts"][0]["text"]
+            print(f"[AI LOG] SUCCESS: Received response (Length: {len(answer)})")
+            return answer
+    except Exception as e:
+        print(f"[AI LOG] EXCEPTION: {str(e)}")
+        return f"⚠️ Connection failed: {str(e)}"
 
 def call_openai(prompt: str, history: list = [], mode: str = "cs") -> str:
     if not settings.OPENAI_API_KEY:
-        return "⚠️ OpenAI API key not configured. Add OPENAI_API_KEY to your .env file."
+        return "⚠️ OpenAI API key not configured."
     
-    if mode == "general":
-        system_msg = "You are a helpful, versatile AI assistant. Answer in clean Markdown."
-    else:
-        system_msg = "You are ConceptFlow AI — an expert CS tutor. Answer in clean Markdown with code examples and real-world analogies. Be concise but thorough."
-
-    messages = [
-        {"role": "system", "content": system_msg}
-    ]
+    messages = [{"role": "system", "content": "Helpful AI assistant."}]
     for msg in history:
         messages.append({"role": msg["role"], "content": msg["content"]})
     messages.append({"role": "user", "content": prompt})
     
-    with httpx.Client(timeout=30) as client:
-        resp = client.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
-            json={"model": "gpt-3.5-turbo", "messages": messages, "max_tokens": 2048}
-        )
-        if resp.status_code != 200:
-            abort(502, description=f"OpenAI error: {resp.text}")
-        return resp.json()["choices"][0]["message"]["content"]
+    try:
+        with httpx.Client(timeout=60) as client:
+            resp = client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
+                json={"model": "gpt-3.5-turbo", "messages": messages, "max_tokens": 2048}
+            )
+            if resp.status_code != 200:
+                return f"⚠️ OpenAI error (Status {resp.status_code}): {resp.text[:200]}"
+            return resp.json()["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"⚠️ Connection failed: {str(e)}"
 
 @ai_bp.route("/format", methods=["POST"])
 @login_required
 def format_doc(current_user):
     data = request.json
     raw_text = data.get("text", "")
+    print(f"[AI LOG] Formatting request received (Input text length: {len(raw_text)})")
+    
     if not raw_text:
         return jsonify({"markdown": ""})
     
@@ -105,13 +100,22 @@ def format_doc(current_user):
     """
     
     try:
-        # Use our existing call_gemini helper
-        formatted = call_gemini(prompt, mode="general")
+        # We now prioritize OpenAI as requested
+        print("[AI LOG] Attempting formatting with OpenAI (ChatGPT)...")
+        formatted = call_openai(prompt, mode="general")
+        
+        # If OpenAI is not configured, fallback to Gemini
+        if "not configured" in formatted and settings.GEMINI_API_KEY:
+            print("[AI LOG] OpenAI not configured, falling back to Gemini...")
+            formatted = call_gemini(prompt, mode="general")
+            
         if formatted.startswith("⚠️"):
-            abort(400, description=formatted)
+            print(f"[AI LOG] Formatting failed: {formatted}")
+            return jsonify({"error": formatted, "description": formatted}), 400
+            
         return jsonify({"markdown": formatted})
     except Exception as e:
-        print(f"Format error: {e}")
+        print(f"[AI LOG] Format Exception: {e}")
         return jsonify({"markdown": raw_text})
 
 @ai_bp.route("/ask", methods=["POST"])

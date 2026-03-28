@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { feedAPI, docsAPI } from '../api'
+import { feedAPI, docsAPI, aiAPI } from '../api'
 import { useAppStore } from '../store'
-import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X, FileText, Upload } from 'lucide-react'
+import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X, FileText, Upload, Zap, Calendar } from 'lucide-react'
 import * as pdfjs from 'pdfjs-dist'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useAuthStore } from '../store'
@@ -122,7 +122,22 @@ function DocEditorModal({ editId, onClose, onSave, initialContent, initialTitle 
             </div>
             
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted mb-1.5 block">Content (Markdown)</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted block">Content (Markdown)</label>
+                <button 
+                  onClick={async () => {
+                    const tid = toast.loading('Neural Architecting...')
+                    try {
+                      const { data } = await aiAPI.format({ text: form.content })
+                      setForm({ ...form, content: data.markdown })
+                      toast.success('Formatted!', { id: tid })
+                    } catch { toast.error('AI formatting failed', { id: tid })}
+                  }}
+                  className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-accent hover:text-accent/80 transition-colors"
+                >
+                  <Bot size={12} /> Format with AI
+                </button>
+              </div>
               <textarea 
                 className="input !bg-surface/30 min-h-[200px] font-mono text-sm leading-relaxed" 
                 value={form.content} 
@@ -209,6 +224,23 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
     navigate(`/ai?topic=${encodeURIComponent(doc.title)}&doc_id=${doc.id}`)
   }
 
+  const handleQuiz = (e) => {
+    e.stopPropagation()
+    navigate(`/docs/${doc.id}?tab=quiz`)
+  }
+
+  const handleFormatInline = async (e) => {
+    e.stopPropagation()
+    const tid = toast.loading('Formatting with AI...')
+    try {
+      const { data } = await aiAPI.format({ text: doc.content || doc.summary || doc.title })
+      await onSave(doc.id, { ...doc, content: data.markdown, summary: data.markdown.split('\n').slice(1, 4).join('\n') })
+      toast.success('Doc Updated!', { id: tid })
+    } catch {
+      toast.error('AI formatting failed', { id: tid })
+    }
+  }
+
   return (
     <div
       className={`feed-card card group relative overflow-hidden flex flex-col transition-all duration-300 ${
@@ -240,9 +272,15 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
         {isEditing ? (
            <span className="text-[10px] font-black uppercase tracking-widest text-accent2 animate-pulse">Edit Mode Active</span>
         ) : (
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted bg-surface/30 px-2 py-1 rounded-lg border border-border/20">
-            <Clock size={12} className="text-accent2" />
-            {doc.read_time_minutes}m
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-[10px] font-black text-muted bg-surface/40 px-2 py-1.5 rounded-lg border border-border/10 shadow-sm transition-colors hover:bg-surface/60">
+              <Calendar size={12} className="text-accent" />
+              {doc.created_at ? new Date(doc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today'}
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] font-black text-muted bg-surface/40 px-2 py-1.5 rounded-lg border border-border/10 shadow-sm transition-colors hover:bg-surface/60">
+              <Clock size={12} className="text-accent2" />
+              {doc.read_time_minutes}m
+            </div>
           </div>
         )}
       </div>
@@ -306,11 +344,29 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
       {/* Actions */}
       <div className="flex items-center gap-1 sm:gap-2 pt-4 border-t border-border/40 mt-auto relative z-10">
         {isEditing ? (
-          <div className="flex items-center gap-2 w-full">
-            <button onClick={handleSaveInline} className="btn-primary flex-1 py-1.5 text-xs">Save Changes</button>
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+            <div className="flex items-center gap-2 w-full">
+              <button onClick={handleSaveInline} className="btn-primary flex-1 py-1.5 text-xs font-black uppercase">Save</button>
+              <button 
+                onClick={async (e) => {
+                  e.stopPropagation()
+                  const tid = toast.loading('Architecting...')
+                  try {
+                    const { data } = await aiAPI.format({ text: editForm.title + "\n" + editForm.summary })
+                    setEditForm(prev => ({ ...prev, summary: data.markdown }))
+                    toast.success('Done!', { id: tid })
+                  } catch { toast.error('Failed', { id: tid }) }
+                }}
+                className="btn-ghost flex-1 py-1.5 text-xs text-accent border border-accent/20 flex items-center justify-center gap-1.5"
+              >
+                <Bot size={13} className="animate-pulse" /> Format
+              </button>
+              <button onClick={handleEditToggle} className="btn-ghost flex-1 py-1.5 text-xs font-black uppercase">Cancel</button>
+            </div>
             <button onClick={(e) => { e.stopPropagation(); onEdit(doc.id); setIsEditing(false) }} 
-                    className="btn-ghost flex-1 py-1.5 text-xs text-accent whitespace-nowrap">Full Editor</button>
-            <button onClick={handleEditToggle} className="btn-ghost flex-1 py-1.5 text-xs">Cancel</button>
+                    className="w-full sm:w-auto text-[9px] font-black uppercase tracking-widest text-muted/60 hover:text-accent transition-colors py-1">
+              Deep Architect Mode
+            </button>
           </div>
         ) : (
           <>
@@ -330,7 +386,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
               }`}
             >
               <RotateCcw size={14} />
-              <span className="hidden xs:inline">Revise</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Revise</span>
             </button>
             {!isRead && (
               <button
@@ -344,28 +400,49 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
 
             <div className="ml-auto flex items-center gap-1">
               <button
+                onClick={handleQuiz}
+                className="flex items-center gap-1 p-2 rounded-xl text-muted hover:text-yellow-400 hover:bg-yellow-400/10 transition-all duration-300"
+                title="Open Quiz"
+              >
+                <Zap size={15} />
+                <span className="text-[10px] font-bold">Quiz</span>
+              </button>
+
+              <button
+                onClick={handleFormatInline}
+                className="flex items-center gap-1 p-2 rounded-xl text-muted hover:text-accent hover:bg-accent/10 transition-all duration-300"
+                title="Format with AI"
+              >
+                <Bot size={15} />
+                <span className="text-[10px] font-bold">Format</span>
+              </button>
+
+              <button
                 onClick={handleAskAI}
-                className="p-2 rounded-xl text-muted hover:text-accent2 hover:bg-accent2/10 transition-all duration-300"
+                className="flex items-center gap-1 p-2 rounded-xl text-muted hover:text-accent2 hover:bg-accent2/10 transition-all duration-300"
                 title="Ask AI about this"
               >
-                <Bot size={18} />
+                <Bot size={15} />
+                <span className="text-[10px] font-bold">Ask AI</span>
               </button>
               
               {isOwner && (
                 <div className="flex items-center gap-1 border-l border-border/30 ml-1 pl-1">
                   <button
                     onClick={handleEditToggle}
-                    className="p-2 rounded-xl text-muted hover:text-accent hover:bg-accent/10 transition-all duration-300"
+                    className="flex items-center gap-1 p-2 rounded-xl text-muted hover:text-accent hover:bg-accent/10 transition-all duration-300"
                     title="Edit Card In-Place"
                   >
-                    <div className="w-4 h-4 flex items-center justify-center text-xs font-bold">✎</div>
+                    <div className="w-3 h-3 flex items-center justify-center text-xs font-bold">✎</div>
+                    <span className="text-[10px] font-bold">Edit</span>
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="p-2 rounded-xl text-muted hover:text-red-400 hover:bg-red-400/10 transition-all duration-300"
+                    className="flex items-center gap-1 p-2 rounded-xl text-muted hover:text-red-400 hover:bg-red-400/10 transition-all duration-300"
                     title="Delete Card"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={15} />
+                    <span className="text-[10px] font-bold">Del</span>
                   </button>
                 </div>
               )}
@@ -459,29 +536,15 @@ export default function FeedPage() {
         }
 
         const title = file.name.replace('.pdf', '').replace(/[-_]/g, ' ')
+        const markdown = `# ${title}\n\n${fullText.trim()}`
         
-        // --- AI Formatting Step ---
-        const toastId = toast.loading('Architecting concept...')
-        try {
-          const { data: fmtData } = await aiAPI.format({ text: fullText.trim() })
-          setEditorModal({ 
-            open: true, 
-            id: null, 
-            initialContent: fmtData.markdown, 
-            initialTitle: title 
-          })
-          toast.success('Successfully architected!', { id: toastId })
-        } catch (err) {
-          console.error(err)
-          const errMsg = err.response?.data?.description || 'AI formatting failed'
-          setEditorModal({ 
-            open: true, 
-            id: null, 
-            initialContent: `# ${title}\n\n${fullText.trim()}`, 
-            initialTitle: title 
-          })
-          toast.error(`${errMsg}, showing raw text`, { id: toastId, duration: 4000 })
-        }
+        setEditorModal({ 
+          open: true, 
+          id: null, 
+          initialContent: markdown, 
+          initialTitle: title 
+        })
+        toast.success(`Extracted ${pdf.numPages} pages! Add AI formatting in the editor if needed.`)
       } catch (err) {
         console.error(err)
         toast.error('Failed to extract text from PDF')
@@ -551,6 +614,7 @@ export default function FeedPage() {
              )}
              <span className="font-bold hidden xs:inline">PDF</span>
            </button>
+
            <button onClick={() => setEditorModal({ open: true, id: null, initialContent: null, initialTitle: null })}
              className="btn-primary !rounded-2xl shadow-accent/40">
              <Plus size={16} />

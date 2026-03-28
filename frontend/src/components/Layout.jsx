@@ -8,13 +8,14 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 
 const NAV = [
-  { to: '/feed', icon: Zap, label: 'Feed' },
-  { to: '/discovery', icon: Globe, label: 'Discovery' },
-  { to: '/ai', icon: Bot, label: 'Neural Chat' },
-  { to: '/revision', icon: RotateCcw, label: 'Revision' },
-  { to: '/bookmarks', icon: Bookmark, label: 'Bookmarks' },
-  { to: '/create', icon: PlusCircle, label: 'Create Doc' },
-  { to: '/profile', icon: User, label: 'Profile' },
+  { path: '/feed', icon: Zap, label: 'Feed' },
+  { path: '/discovery', icon: Globe, label: 'Discovery' },
+  { path: '/ai', icon: Bot, label: 'Neural Chat' },
+  { path: '/search', icon: Search, label: 'Search' },
+  { path: '/revision', icon: RotateCcw, label: 'Revision' },
+  { path: '/bookmarks', icon: Bookmark, label: 'Saved' },
+  { path: '/create', icon: PlusCircle, label: 'Create' },
+  { path: '/profile', icon: User, label: 'Profile' },
 ]
 
 export default function Layout() {
@@ -45,10 +46,10 @@ export default function Layout() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {NAV.map(({ to, icon: Icon, label }) => (
+        {NAV.map(({ path, icon: Icon, label }) => (
           <NavLink
-            key={to}
-            to={to}
+            key={path}
+            to={path}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                 isActive
@@ -118,35 +119,35 @@ export default function Layout() {
               className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] animate-fade-in"
               onClick={() => setMoreDrawerOpen(false)}
             />
-            <div className="fixed bottom-[85px] left-4 right-4 bg-surface/95 backdrop-blur-2xl border border-white/10 rounded-3xl p-5 z-[70] animate-slide-up shadow-2xl">
-              <div className="flex items-center justify-between mb-5 pb-3 border-b border-border/50">
-                <span className="font-bold text-bright flex items-center gap-2 text-base">
-                  <Menu size={18} className="text-accent2" /> Menu
+            <div className="fixed bottom-[65px] left-0 right-0 bg-surface/95 backdrop-blur-2xl border-t border-white/10 rounded-t-3xl p-6 z-[70] animate-slide-up shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/50">
+                <span className="font-black text-bright flex items-center gap-3 text-lg uppercase tracking-tight">
+                  <Menu size={20} className="text-accent2" /> Menu
                 </span>
-                <button onClick={() => setMoreDrawerOpen(false)} className="btn-icon"><X size={20} /></button>
+                <button onClick={() => setMoreDrawerOpen(false)} className="btn-icon p-2 hover:bg-white/5 rounded-xl"><X size={20} /></button>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {[NAV[4], NAV[6]].map(({ to, icon: Icon, label }) => (
+                {[NAV[4], NAV[7]].map(({ path, icon: Icon, label }) => (
                   <NavLink
-                    key={to}
-                    to={to}
+                    key={path}
+                    to={path}
                     onClick={() => setMoreDrawerOpen(false)}
                     className={({ isActive }) =>
-                      `flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all duration-300 ${
-                        isActive ? 'bg-accent/10 border-accent/40 text-accent shadow-lg shadow-accent/5' : 'border-border/40 bg-card/40 text-muted hover:bg-card/60'
+                      `flex flex-col items-center gap-2.5 p-5 rounded-2xl border transition-all duration-300 ${
+                        isActive ? 'bg-accent/15 border-accent/40 text-accent shadow-xl shadow-accent/10' : 'border-border/40 bg-card/40 text-muted hover:bg-card/60'
                       }`
                     }
                   >
-                    <Icon size={20} />
-                    <span className="text-xs font-semibold">{label}</span>
+                    <Icon size={22} />
+                    <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
                   </NavLink>
                 ))}
                 <button 
                   onClick={handleLogout}
-                  className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-400 transition-all hover:bg-red-500/10"
+                  className="flex flex-col items-center gap-2.5 p-5 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-400 transition-all hover:bg-red-500/10"
                 >
-                  <LogOut size={20} />
-                  <span className="text-xs font-semibold">Logout</span>
+                  <LogOut size={22} />
+                  <span className="text-[11px] font-black uppercase tracking-widest">Logout</span>
                 </button>
               </div>
             </div>
@@ -154,50 +155,55 @@ export default function Layout() {
         )}
 
         {/* Bottom Navigation (Mobile Only) */}
-        <nav className="lg:hidden fixed bottom-4 left-4 right-4 bg-surface/90 backdrop-blur-xl border border-white/10 rounded-2xl px-2 py-2 flex items-center justify-around z-50 shadow-2xl">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-3xl border-t border-white/10 px-2 py-2.5 flex items-center justify-around z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
           {[
             NAV[0], // Feed
             NAV[1], // Discovery
             NAV[2], // Neural Chat
-            NAV[5], // Create Doc (Docs)
-          ].map(({ to, icon: Icon, label }) => (
+            NAV[6], // Create
+            NAV[5], // Bookmarks
+          ].map(({ path, icon: Icon, label }) => (
             <NavLink
-              key={to}
-              to={to}
+              key={path}
+              to={path}
               onClick={() => setMoreDrawerOpen(false)}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-300 ${
+                `flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
                   isActive
-                    ? 'text-accent2 bg-accent2/10 shadow-inner'
+                    ? 'text-accent2'
                     : 'text-muted hover:text-bright'
                 }`
               }
             >
-              <div className="relative">
-                <Icon size={20} className={`transition-transform duration-300 ${to === window.location.pathname ? 'scale-110' : ''}`} />
-                {/* Active Indicator Dot removed for cleaner look or changed */}
-              </div>
-              <span className="text-[10px] font-bold tracking-wider uppercase">
-                {label === 'Create Doc' ? 'Docs' : label.split(' ')[0]}
-              </span>
+              {({ isActive }) => (
+                <>
+                  <div className="relative">
+                    <Icon size={22} className={`transition-all duration-300 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(233,69,96,0.3)]' : ''}`} />
+                    {isActive && (
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-accent2 rounded-full" />
+                    )}
+                  </div>
+                  <span className={`text-[9px] font-black tracking-widest uppercase transition-all duration-300 ${isActive ? 'opacity-100 mt-1' : 'opacity-60'}`}>
+                    {label}
+                  </span>
+                </>
+              )}
             </NavLink>
           ))}
           
-          {/* More Button */}
           <button
             onClick={() => setMoreDrawerOpen(!moreDrawerOpen)}
-            className={`flex flex-col items-center justify-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-300 ${
-              moreDrawerOpen ? 'text-accent2 bg-accent2/10' : 'text-muted'
+            className={`flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
+              moreDrawerOpen ? 'text-accent2' : 'text-muted'
             }`}
           >
             <div className="relative">
-              <MoreHorizontal size={20} className="transition-transform duration-300" />
+              <MoreHorizontal size={22} className="transition-transform duration-300" />
             </div>
-            <span className="text-[10px] font-bold tracking-wider uppercase">More</span>
+            <span className="text-[9px] font-black tracking-widest uppercase opacity-60">Menu</span>
           </button>
         </nav>
       </div>
     </div>
   )
 }
-

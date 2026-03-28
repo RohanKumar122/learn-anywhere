@@ -98,25 +98,12 @@ export default function CreateDocPage() {
         }
         
         const title = file.name.replace('.pdf', '').replace(/[-_]/g, ' ')
-        
-        const tid = toast.loading('Intelligently formatting...')
-        try {
-          const { data: fmt } = await aiAPI.format({ text: fullText.trim() })
-          setForm(prev => ({
-            ...prev,
-            title: prev.title || title,
-            content: fmt.markdown
-          }))
-          toast.success('Formatted!', { id: tid })
-        } catch (err) {
-          const errMsg = err.response?.data?.description || 'AI formatting failed'
-          setForm(prev => ({
-            ...prev,
-            title: prev.title || title,
-            content: fullText.trim()
-          }))
-          toast.error(`${errMsg}, showing raw text`, { id: tid, duration: 4000 })
-        }
+        setForm(prev => ({
+          ...prev,
+          title: prev.title || title,
+          content: fullText.trim()
+        }))
+        toast.success(`Extracted ${pdf.numPages} pages! Use 'Format with AI' to beautify.`)
       } catch { toast.error('Extraction failed') }
       finally { setExtracting(false); e.target.value = '' }
     }
@@ -243,9 +230,20 @@ export default function CreateDocPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs text-muted">Content (Markdown)</label>
-                  <span className="text-xs text-muted flex items-center gap-1">
-                    <HelpCircle size={11} /> Supports code blocks, tables, headers
-                  </span>
+                  <button 
+                    type="button"
+                    onClick={async () => {
+                      const tid = toast.loading('Neural Architecting...')
+                      try {
+                        const { data } = await aiAPI.format({ text: form.content })
+                        setForm({ ...form, content: data.markdown })
+                        toast.success('Formatted!', { id: tid })
+                      } catch { toast.error('AI formatting failed', { id: tid })}
+                    }}
+                    className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-accent hover:text-accent/80 transition-colors"
+                  >
+                    <Bot size={12} /> Format with AI
+                  </button>
                 </div>
                 <textarea
                   className="input resize-none h-96 font-mono text-sm leading-relaxed"

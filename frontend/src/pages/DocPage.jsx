@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -27,7 +27,9 @@ export default function DocPage() {
   const [bookmarked, setBookmarked] = useState(false)
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [note, setNote] = useState('')
-  const [tab, setTab] = useState('read') // read | quiz | flashcards
+  const [searchParams] = useSearchParams()
+  const initialTab = searchParams.get('tab') || 'read'
+  const [tab, setTab] = useState(initialTab) // read | quiz | flashcards
   const [quiz, setQuiz] = useState(null)
   const [quizLoading, setQuizLoading] = useState(false)
   const [quizAnswers, setQuizAnswers] = useState({})
@@ -39,7 +41,9 @@ export default function DocPage() {
 
   useEffect(() => {
     loadDoc()
-  }, [id])
+    if (initialTab === 'quiz' && !quiz) loadQuiz()
+    if (initialTab === 'flashcards' && !flashcards) loadFlashcards()
+  }, [id, initialTab])
 
   // Reading progress tracker
   useEffect(() => {
@@ -249,7 +253,7 @@ export default function DocPage() {
               }`}
             >
               <t.icon size={12} className="sm:w-3.5 sm:h-3.5" />
-              <span className="hidden xs:inline">{t.label}</span>
+              <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-widest">{t.label}</span>
             </button>
           ))}
         </div>
