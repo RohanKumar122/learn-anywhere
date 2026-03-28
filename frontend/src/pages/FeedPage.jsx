@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { feedAPI, docsAPI } from '../api'
 import { useAppStore } from '../store'
-import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter } from 'lucide-react'
+import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot } from 'lucide-react'
+import { useAuthStore } from '../store'
 import toast from 'react-hot-toast'
 
 const CATEGORIES = ['All', 'DSA', 'System Design', 'OS', 'DBMS', 'CN', 'Other']
@@ -23,11 +24,13 @@ const CAT_COLORS = {
   Other: 'text-gray-400 bg-gray-400/10',
 }
 
-function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead }) {
+function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete }) {
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const [bookmarked, setBookmarked] = useState(doc.is_bookmarked)
   const [inRevision, setInRevision] = useState(false)
   const [isRead, setIsRead] = useState(doc.is_read)
+  const isOwner = user?.id === doc.owner_id
 
   const handleBookmark = async (e) => {
     e.stopPropagation()
@@ -54,6 +57,25 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead }) {
       setIsRead(true)
       toast.success('Marked as read')
     } catch { toast.error('Failed') }
+  }
+
+  const handleDelete = async (e) => {
+    e.stopPropagation()
+    if (!window.confirm('Delete this card?')) return
+    try {
+      await onDelete(doc.id)
+      toast.success('Deleted')
+    } catch { toast.error('Failed to delete') }
+  }
+
+  const handleEdit = (e) => {
+    e.stopPropagation()
+    navigate(`/create?edit=${doc.id}`)
+  }
+
+  const handleAskAI = (e) => {
+    e.stopPropagation()
+    navigate(`/ai?topic=${encodeURIComponent(doc.title)}`)
   }
 
   return (
@@ -105,7 +127,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead }) {
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-2 pt-3 border-t border-border">
+      <div className="flex items-center gap-2 pt-3 border-t border-border mt-auto">
         <button
           onClick={handleBookmark}
           className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-colors ${
@@ -113,7 +135,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead }) {
           }`}
         >
           <Bookmark size={13} fill={bookmarked ? 'currentColor' : 'none'} />
-          {bookmarked ? 'Saved' : 'Save'}
+          <span className="hidden xs:inline">{bookmarked ? 'Saved' : 'Save'}</span>
         </button>
         <button
           onClick={handleRevision}
@@ -122,19 +144,45 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead }) {
           }`}
         >
           <RotateCcw size={13} />
-          Revise Later
+          <span className="hidden xs:inline">Revise</span>
         </button>
         {!isRead && (
           <button
             onClick={handleMarkRead}
-            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg text-muted hover:text-green-400 hover:bg-green-400/10 transition-colors ml-auto"
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg text-muted hover:text-green-400 hover:bg-green-400/10 transition-colors"
           >
             <CheckCircle size={13} />
-            Mark Read
+            <span className="hidden xs:inline">Read</span>
           </button>
         )}
-        <div className="ml-auto text-xs text-muted">
-          {doc.owner_name}
+
+        <div className="ml-auto flex items-center gap-1">
+          <button
+            onClick={handleAskAI}
+            className="p-1.5 rounded-lg text-muted hover:text-accent2 hover:bg-accent2/10 transition-colors"
+            title="Ask AI about this"
+          >
+            <Bot size={16} />
+          </button>
+          
+          {isOwner && (
+            <>
+              <button
+                onClick={handleEdit}
+                className="p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accent/10 transition-colors"
+                title="Edit Card"
+              >
+                <div className="w-4 h-4 flex items-center justify-center text-xs font-bold">✎</div>
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-1.5 rounded-lg text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                title="Delete Card"
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -173,6 +221,11 @@ export default function FeedPage() {
       setLoading(false)
     }
   }, [category, difficulty, loading, setFeed, appendFeed])
+
+  const handleDeleteDoc = async (id) => {
+    await docsAPI.delete(id)
+    setFeed(docs.filter(d => d.id !== id), hasMore, page)
+  }
 
   // Reload only if filters change OR if feed is empty
   useEffect(() => {
@@ -267,6 +320,7 @@ export default function FeedPage() {
             onBookmark={(id) => docsAPI.bookmark(id)}
             onAddRevision={handleRevision}
             onMarkRead={handleMarkRead}
+            onDelete={handleDeleteDoc}
           />
         ))}
 
