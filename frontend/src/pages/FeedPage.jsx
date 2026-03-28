@@ -803,37 +803,7 @@ export default function FeedPage() {
             </button>
           </div>
         )}
-        {!hasMore && docs.length > 0 && (
-          <div className="mt-12 p-8 rounded-[2.5rem] bg-surface/30 border border-border/10 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 grad-accent opacity-[0.05] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            
-            <div className="flex flex-col items-center text-center relative z-10">
-               <div className="w-12 h-12 rounded-2xl bg-accent2/10 flex items-center justify-center mb-6 shadow-xl shadow-accent2/5 border border-accent2/20">
-                  <Zap size={24} className="text-accent2 animate-pulse" />
-               </div>
-               <h3 className="text-xl font-black text-bright mb-2 tracking-tight uppercase">Knowledge Architecture Complete</h3>
-               <p className="text-muted/70 text-sm max-w-sm mb-8 leading-relaxed">
-                 You've architected your personalized learning stream for this cycle. Ready to explore the global neural collective?
-               </p>
-               
-               <div className="flex flex-wrap justify-center gap-4">
-                  <button 
-                    onClick={() => navigate('/discovery')}
-                    className="btn-primary !px-8 !rounded-2xl shadow-lg shadow-accent/20 flex items-center gap-2 group/btn"
-                  >
-                    <span>Explore Cosmos</span>
-                    <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
-                  <button 
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="btn-ghost !px-8 !rounded-2xl border-white/5 text-muted hover:text-bright"
-                  >
-                    Back to Zenith
-                  </button>
-               </div>
-            </div>
-          </div>
-        )}
+
 
         {!loading && docs.length === 0 && (
           <div className="text-center py-20 bg-surface/20 rounded-3xl border border-dashed border-border/50">
