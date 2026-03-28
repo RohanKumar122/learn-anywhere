@@ -169,7 +169,7 @@ export default function DocPage() {
           </span>
         </div>
 
-        <h1 className="text-4xl font-black text-bright leading-tight mb-6 tracking-tight group">
+        <h1 className="text-3xl sm:text-4xl font-black text-bright leading-[1.15] mb-6 tracking-tight group">
           {doc.title}
         </h1>
 
@@ -179,31 +179,31 @@ export default function DocPage() {
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 mb-10 pt-6 border-t border-border/30">
+        {/* Action buttons - Improved for mobile with horizontal scroll if needed */}
+        <div className="flex items-center gap-3 mb-10 pt-6 border-t border-border/30 overflow-x-auto no-scrollbar pb-2">
           <button onClick={handleBookmark}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border transition-all duration-300 hover-lift ${
-              bookmarked ? 'border-accent2 text-accent2 bg-accent2/10' : 'border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30'
+            className={`whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border transition-all duration-300 hover-lift ${
+              bookmarked ? 'border-accent2 text-accent2 bg-accent2/10 shadow-lg shadow-accent2/5' : 'border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30'
             }`}>
-            <Bookmark size={16} fill={bookmarked ? 'currentColor' : 'none'} />
+            <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
             {bookmarked ? 'Saved' : 'Save'}
           </button>
           
           <button onClick={handleAddRevision}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border border-border/60 text-muted hover:border-yellow-400/50 hover:text-yellow-400 bg-surface/30 transition-all duration-300 hover-lift">
-            <RotateCcw size={16} /> Revise
+            className="whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border border-border/60 text-muted hover:border-yellow-400/50 hover:text-yellow-400 bg-surface/30 transition-all duration-300 hover-lift">
+            <RotateCcw size={14} /> Revise
           </button>
           
           <button onClick={() => setShowNoteInput(!showNoteInput)}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border transition-all duration-300 hover-lift ${
-              showNoteInput ? 'border-accent text-accent bg-accent/10' : 'border-border/60 text-muted hover:border-accent/50 hover:text-bright bg-surface/30'
+            className={`whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border transition-all duration-300 hover-lift ${
+              showNoteInput ? 'border-accent text-accent bg-accent/10 opacity-100' : 'border-border/60 text-muted hover:border-accent/50 hover:text-bright bg-surface/30'
             }`}>
-            <StickyNote size={16} /> Note
+            <StickyNote size={14} /> Note
           </button>
           
           <button onClick={() => navigate(`/ai?topic=${encodeURIComponent(doc.title)}&doc_id=${id}`)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-widest px-6 py-3 rounded-2xl border border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30 transition-all duration-300 hover-lift">
-            <Bot size={16} /> Think Deep
+            className="whitespace-nowrap flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest px-5 py-3 rounded-2xl border border-border/60 text-muted hover:border-accent2/50 hover:text-bright bg-surface/30 transition-all duration-300 hover-lift">
+            <Bot size={14} /> Think Deep
           </button>
         </div>
 
@@ -227,31 +227,32 @@ export default function DocPage() {
         )}
       </div>
 
-      {/* Tab Interface */}
-      <div className="flex gap-1.5 bg-surface/40 backdrop-blur-sm rounded-3xl p-1.5 mb-10 border border-border/20 shadow-inner">
-        {[
-          { key: 'read', label: 'Knowledge Base', icon: Zap },
-          { key: 'quiz', label: 'Recall Test', icon: CheckCircle },
-          { key: 'flashcards', label: 'Active Recall', icon: RotateCcw },
-        ].map(t => (
-          <button
-            key={t.key}
-            onClick={() => {
-              setTab(t.key)
-              if (t.key === 'quiz' && !quiz) loadQuiz()
-              if (t.key === 'flashcards' && !flashcards) loadFlashcards()
-            }}
-            className={`flex-1 flex items-center justify-center gap-2.5 text-[11px] font-black uppercase tracking-widest py-3 rounded-2xl transition-all duration-300 ${
-              tab === t.key 
-                ? 'bg-card text-accent2 shadow-lg shadow-black/20 border border-border/50' 
-                : 'text-muted hover:text-bright hover:bg-surface/60'
-            }`}
-          >
-            <t.icon size={14} />
-            <span className="hidden sm:inline">{t.label}</span>
-            <span className="sm:hidden">{t.label.split(' ')[0]}</span>
-          </button>
-        ))}
+      {/* Tab Interface - Optimized for touch */}
+      <div className="sticky top-0 lg:static z-40 py-2 sm:py-0 mb-8 sm:mb-10 bg-bg lg:bg-transparent">
+        <div className="flex gap-1 bg-surface/60 backdrop-blur-xl rounded-[1.25rem] p-1 border border-border/30 shadow-2xl">
+          {[
+            { key: 'read', label: 'Docs', full: 'Knowledge Base', icon: Zap },
+            { key: 'quiz', label: 'Quiz', full: 'Recall Test', icon: CheckCircle },
+            { key: 'flashcards', label: 'Flash', full: 'Active Recall', icon: RotateCcw },
+          ].map(t => (
+            <button
+              key={t.key}
+              onClick={() => {
+                setTab(t.key)
+                if (t.key === 'quiz' && !quiz) loadQuiz()
+                if (t.key === 'flashcards' && !flashcards) loadFlashcards()
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all duration-300 ${
+                tab === t.key 
+                  ? 'bg-accent/10 text-accent border border-accent/20 shadow-inner' 
+                  : 'text-muted hover:text-bright hover:bg-surface'
+              }`}
+            >
+              <t.icon size={12} className="sm:w-3.5 sm:h-3.5" />
+              <span className="hidden xs:inline">{t.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content Rendering */}
