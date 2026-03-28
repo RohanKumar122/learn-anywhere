@@ -12,7 +12,8 @@ def call_gemini(prompt: str, history: list = []) -> str:
     if not settings.GEMINI_API_KEY:
         return "⚠️ Gemini API key not configured. Add GEMINI_API_KEY to your .env file."
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={settings.GEMINI_API_KEY}"
+    # The correct model name for Google's API as of 2024+ is gemini-1.5-flash
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={settings.GEMINI_API_KEY}"
     
     contents = []
     for msg in history:
@@ -180,10 +181,23 @@ Return ONLY valid JSON array like:
         return jsonify({"quiz": get_sample_quiz()})
     
     try:
-        start = raw.find("[")
-        end = raw.rfind("]") + 1
-        quiz = json.loads(raw[start:end])
-    except:
+        # Improved parsing to handle markdown blocks (like ```json ... ```)
+        clean_raw = raw.strip()
+        if "```" in clean_raw:
+            # Extract content between markdown code blocks if present
+            import re
+            json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', clean_raw)
+            if json_match:
+                clean_raw = json_match.group(1)
+        
+        start = clean_raw.find("[")
+        end = clean_raw.rfind("]") + 1
+        if start != -1 and end != 0:
+            quiz = json.loads(clean_raw[start:end])
+        else:
+            quiz = get_sample_quiz()
+    except Exception as e:
+        print(f"Error parsing quiz JSON: {str(e)}")
         quiz = get_sample_quiz()
     
     return jsonify({"quiz": quiz})
@@ -213,10 +227,21 @@ Return ONLY valid JSON array:
         return jsonify({"flashcards": [{"front": "What is the concept?", "back": "See the doc for details."}]})
     
     try:
-        start = raw.find("[")
-        end = raw.rfind("]") + 1
-        cards = json.loads(raw[start:end])
-    except:
+        clean_raw = raw.strip()
+        if "```" in clean_raw:
+            import re
+            json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', clean_raw)
+            if json_match:
+                clean_raw = json_match.group(1)
+
+        start = clean_raw.find("[")
+        end = clean_raw.rfind("]") + 1
+        if start != -1 and end != 0:
+            cards = json.loads(clean_raw[start:end])
+        else:
+            cards = [{"front": "Review needed", "back": "Could not parse flashcards"}]
+    except Exception as e:
+        print(f"Error parsing flashcards JSON: {str(e)}")
         cards = [{"front": "Review needed", "back": "Could not parse flashcards"}]
     
     return jsonify({"flashcards": cards})
