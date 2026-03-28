@@ -2,9 +2,14 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { feedAPI, docsAPI } from '../api'
 import { useAppStore } from '../store'
-import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X } from 'lucide-react'
+import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X, FileText, Upload } from 'lucide-react'
+import * as pdfjs from 'pdfjs-dist'
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useAuthStore } from '../store'
 import toast from 'react-hot-toast'
+
+// Use local worker bundled by Vite instead of CDN for stability
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker
 
 const CATEGORIES = ['All', 'DSA', 'System Design', 'OS', 'DBMS', 'CN', 'Other']
 const DIFFICULTIES = ['All', 'Easy', 'Medium', 'Hard']
@@ -33,10 +38,10 @@ Brief intro to the concept.
 One-liner summary.
 `
 
-function DocEditorModal({ editId, onClose, onSave }) {
+function DocEditorModal({ editId, onClose, onSave, initialContent, initialTitle }) {
   const [form, setForm] = useState({
-    title: '',
-    content: TEMPLATE,
+    title: initialTitle || '',
+    content: initialContent || TEMPLATE,
     summary: '',
     category: 'DSA',
     difficulty: 'Medium',
@@ -375,9 +380,11 @@ export default function FeedPage() {
   } = useAppStore()
   
   const [loading, setLoading] = useState(false)
+  const [processingPdf, setProcessingPdf] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
-  const [editorModal, setEditorModal] = useState({ open: false, id: null })
+  const [editorModal, setEditorModal] = useState({ open: false, id: null, initialContent: null, initialTitle: null })
   const loaderRef = useRef(null)
+  const pdfInputRef = useRef(null)
   const isInitialMount = useRef(true)
 
   const loadFeed = useCallback(async (pg = 1, isReset = false) => {
@@ -414,6 +421,51 @@ export default function FeedPage() {
       const { data } = await docsAPI.create(docData)
       setFeed([data, ...docs], hasMore, page)
     }
+  }
+
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file || file.type !== 'application/pdf') {
+      toast.error('Please select a valid PDF file')
+      return
+    }
+
+    setProcessingPdf(true)
+    const reader = new FileReader()
+    
+    reader.onload = async (event) => {
+      try {
+        const typedArray = new Uint8Array(event.target.result)
+        const pdf = await pdfjs.getDocument(typedArray).promise
+        let fullText = ``
+        
+        for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) { // Limit for speed/memory
+          const page = await pdf.getPage(i)
+          const content = await page.getTextContent()
+          const strings = content.items.map(item => item.str)
+          fullText += strings.join(' ') + '\n\n'
+        }
+
+        const title = file.name.replace('.pdf', '').replace(/[-_]/g, ' ')
+        const markdown = `# ${title}\n\n${fullText.trim()}`
+        
+        setEditorModal({ 
+          open: true, 
+          id: null, 
+          initialContent: markdown, 
+          initialTitle: title 
+        })
+        toast.success(`Extracted ${pdf.numPages} pages locally!`)
+      } catch (err) {
+        console.error(err)
+        toast.error('Failed to extract text from PDF')
+      } finally {
+        setProcessingPdf(false)
+        if (pdfInputRef.current) pdfInputRef.current.value = ''
+      }
+    }
+    
+    reader.readAsArrayBuffer(file)
   }
 
   // Reload only if filters change OR if feed is empty
@@ -455,7 +507,25 @@ export default function FeedPage() {
           <p className="text-muted text-sm font-medium ml-4">Personalized knowledge stream for your growth</p>
         </div>
         <div className="flex gap-2">
-           <button onClick={() => setEditorModal({ open: true, id: null })}
+           <input
+             type="file"
+             ref={pdfInputRef}
+             className="hidden"
+             accept=".pdf"
+             onChange={handlePdfUpload}
+           />
+           <button 
+             onClick={() => pdfInputRef.current?.click()}
+             disabled={processingPdf}
+             className="btn-ghost !rounded-2xl border-accent/30 text-accent hover:bg-accent/5">
+             {processingPdf ? (
+               <div className="w-4 h-4 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+             ) : (
+               <Upload size={16} />
+             )}
+             <span className="font-bold hidden xs:inline">PDF</span>
+           </button>
+           <button onClick={() => setEditorModal({ open: true, id: null, initialContent: null, initialTitle: null })}
              className="btn-primary !rounded-2xl shadow-accent/40">
              <Plus size={16} />
              <span className="font-bold">Quick Doc</span>
@@ -587,7 +657,9 @@ export default function FeedPage() {
       {editorModal.open && (
          <DocEditorModal 
            editId={editorModal.id}
-           onClose={() => setEditorModal({ open: false, id: null })}
+           initialContent={editorModal.initialContent}
+           initialTitle={editorModal.initialTitle}
+           onClose={() => setEditorModal({ open: false, id: null, initialContent: null, initialTitle: null })}
            onSave={handleSaveDoc}
          />
       )}

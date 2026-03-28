@@ -4,8 +4,12 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { docsAPI } from '../api'
-import { Eye, Code, Save, HelpCircle } from 'lucide-react'
+import { Eye, Code, Save, HelpCircle, Upload, FileText } from 'lucide-react'
+import * as pdfjs from 'pdfjs-dist'
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import toast from 'react-hot-toast'
+
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker
 
 const TEMPLATE = `# Your Title Here
 
@@ -46,6 +50,7 @@ export default function CreateDocPage() {
   const [preview, setPreview] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false)
+  const [extracting, setExtracting] = useState(false)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const editId = searchParams.get('edit')
@@ -70,6 +75,39 @@ export default function CreateDocPage() {
     } finally {
       setFetching(false)
     }
+  }
+
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file || file.type !== 'application/pdf') {
+      toast.error('Invalid file')
+      return
+    }
+
+    setExtracting(true)
+    const reader = new FileReader()
+    reader.onload = async (event) => {
+      try {
+        const typedArray = new Uint8Array(event.target.result)
+        const pdf = await pdfjs.getDocument(typedArray).promise
+        let fullText = ''
+        for (let i = 1; i <= Math.min(pdf.numPages, 20); i++) {
+          const page = await pdf.getPage(i)
+          const content = await page.getTextContent()
+          fullText += content.items.map(item => item.str).join(' ') + '\n\n'
+        }
+        
+        const title = file.name.replace('.pdf', '').replace(/[-_]/g, ' ')
+        setForm(prev => ({
+          ...prev,
+          title: prev.title || title,
+          content: fullText.trim()
+        }))
+        toast.success(`Extracted ${pdf.numPages} pages!`)
+      } catch { toast.error('Extraction failed') }
+      finally { setExtracting(false); e.target.value = '' }
+    }
+    reader.readAsArrayBuffer(file)
   }
 
   const handleSubmit = async (e) => {
@@ -107,6 +145,15 @@ export default function CreateDocPage() {
           <p className="text-muted text-sm">Write in Markdown — code blocks and tables supported</p>
         </div>
         <div className="flex gap-2">
+          <label className={`btn-ghost cursor-pointer flex items-center gap-2 ${extracting ? 'opacity-50 pointer-events-none' : ''}`}>
+             <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} />
+             {extracting ? (
+               <div className="w-3 h-3 border border-accent2/30 border-t-accent2 rounded-full animate-spin" />
+             ) : (
+               <Upload size={15} className="text-accent2" />
+             )}
+             <span className="hidden sm:inline">Import PDF</span>
+          </label>
           <button onClick={() => setPreview(!preview)}
             className={`btn-ghost flex items-center gap-2 ${preview ? 'border-accent2 text-accent2' : ''}`}>
             {preview ? <Code size={15} /> : <Eye size={15} />}
