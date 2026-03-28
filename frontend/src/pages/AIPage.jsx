@@ -93,6 +93,7 @@ export default function AIPage() {
   const navigate = useNavigate()
   const { chatHistory, addMessage, clearChat } = useAppStore()
   const [input, setInput] = useState('')
+  const [selectedModel, setSelectedModel] = useState('gemini')
   const [loading, setLoading] = useState(false)
   const [saveModal, setSaveModal] = useState(null) // content to save
   const bottomRef = useRef(null)
@@ -117,6 +118,7 @@ export default function AIPage() {
       const { data } = await aiAPI.ask({
         question: q,
         history: chatHistory.slice(-10), // Last 10 messages for context
+        model_choice: selectedModel,
       })
       addMessage({ role: 'assistant', content: data.answer, chat_id: data.chat_id })
     } catch {
@@ -144,11 +146,29 @@ export default function AIPage() {
             <div className="text-xs text-accent2">DSA + System Design Expert</div>
           </div>
         </div>
-        {chatHistory.length > 0 && (
-          <button onClick={clearChat} className="flex items-center gap-1.5 text-xs text-muted hover:text-accent transition-colors">
-            <Trash2 size={13} /> Clear
-          </button>
-        )}
+        
+        <div className="flex items-center gap-4">
+          <div className="flex bg-border/20 p-0.5 rounded-lg border border-border/50">
+            <button 
+              onClick={() => setSelectedModel('gemini')}
+              className={`px-3 py-1 text-[10px] font-medium rounded-md transition-all ${selectedModel === 'gemini' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-bright'}`}
+            >
+              Gemini
+            </button>
+            <button 
+              onClick={() => setSelectedModel('openai')}
+              className={`px-3 py-1 text-[10px] font-medium rounded-md transition-all ${selectedModel === 'openai' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-bright'}`}
+            >
+              OpenAI
+            </button>
+          </div>
+
+          {chatHistory.length > 0 && (
+            <button onClick={clearChat} className="flex items-center gap-1.5 text-xs text-muted hover:text-accent transition-colors">
+              <Trash2 size={13} /> Clear
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}

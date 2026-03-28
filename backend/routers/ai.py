@@ -18,6 +18,7 @@ class AskRequest(BaseModel):
     question: str
     history: Optional[List[ChatMessage]] = []
     context_doc_id: Optional[str] = None  # for asking about a specific doc
+    model_choice: Optional[str] = "gemini"  # gemini | openai
 
 class SaveAsDocRequest(BaseModel):
     title: str
@@ -30,7 +31,7 @@ async def call_gemini(prompt: str, history: List[dict] = []) -> str:
     if not settings.GEMINI_API_KEY:
         return "⚠️ Gemini API key not configured. Add GEMINI_API_KEY to your .env file."
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={settings.GEMINI_API_KEY}"
     
     contents = []
     for msg in history:
@@ -92,8 +93,13 @@ async def ask_ai(data: AskRequest, current_user=Depends(get_current_user)):
     db = get_db()
     history = [{"role": m.role, "content": m.content} for m in data.history]
     
-    # Try Gemini first, fallback to OpenAI
-    if settings.GEMINI_API_KEY:
+    # Select provider based on choice or availability
+    provider = data.model_choice.lower() if data.model_choice else "gemini"
+    
+    if provider == "openai" and settings.OPENAI_API_KEY:
+        answer = await call_openai(data.question, history)
+        provider = "openai"
+    elif settings.GEMINI_API_KEY:
         answer = await call_gemini(data.question, history)
         provider = "gemini"
     elif settings.OPENAI_API_KEY:
