@@ -184,12 +184,16 @@ export default function AIPage() {
               </button>
             </div>
 
-          {chatHistory.length > 0 && (
-            <button onClick={clearChat} className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-red-400 transition-colors">
-              <Trash2 size={13} />
-              <span className="hidden xs:inline">Clear</span>
-            </button>
-          )}
+            {chatHistory.length > 0 && (
+              <button 
+                onClick={clearChat} 
+                className="flex items-center gap-1.5 text-xs font-medium text-muted hover:text-red-400 transition-colors"
+              >
+                <Trash2 size={13} />
+                <span className="hidden xs:inline">Clear</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
