@@ -154,11 +154,11 @@ export default function AIPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 lg:px-8 max-w-5xl mx-auto w-full">
           
           {/* Agent Mode - Mobile Optimized */}
-          <div className="flex flex-col gap-1.5 flex-1">
-             <div className="text-[9px] font-black uppercase tracking-[0.2em] text-accent/60 pl-2">Intelligence Agent</div>
-             <div className="flex bg-surface/30 p-1 rounded-2xl border border-border/30 relative h-10 w-full shadow-inner overflow-hidden">
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+             <div className="text-[8px] font-black uppercase tracking-[0.2em] text-accent/60 pl-1 mb-1">Intelligence Agent</div>
+             <div className="flex bg-surface/40 p-1 rounded-xl border border-border/30 relative h-9 w-full shadow-inner overflow-hidden">
                 <div 
-                  className="absolute top-1 bottom-1 bg-accent rounded-xl transition-all duration-300 ease-out shadow-lg shadow-accent/10 z-0"
+                  className="absolute top-1 bottom-1 bg-accent rounded-lg transition-all duration-300 ease-out shadow-lg shadow-accent/10 z-0"
                   style={{ 
                     left: aiMode === 'cs' ? '4px' : 'calc(50% + 2px)', 
                     width: 'calc(50% - 6px)' 
@@ -167,42 +167,42 @@ export default function AIPage() {
                 
                 <button
                   onClick={() => setAiMode('cs')}
-                  className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                  className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${
                     aiMode === 'cs' ? 'text-white' : 'text-muted hover:text-bright'
                   }`}
                 >
-                  <Sparkles size={12} />
+                  <Sparkles size={11} />
                   <span>CS Expert</span>
                 </button>
                 
                 <button
                   onClick={() => setAiMode('general')}
-                  className={`relative z-10 flex-1 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                  className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${
                     aiMode === 'general' ? 'text-white' : 'text-muted hover:text-bright'
                   }`}
                 >
-                  <Bot size={12} />
+                  <Bot size={11} />
                   <span>General</span>
                 </button>
              </div>
           </div>
 
           {/* Engine Selection - Mobile Optimized */}
-          <div className="flex flex-col gap-1.5 flex-1">
-             <div className="flex items-center justify-between px-2">
-                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-accent2/60">AI Engine</div>
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+             <div className="flex items-center justify-between px-1 mb-1">
+                <div className="text-[8px] font-black uppercase tracking-[0.2em] text-accent2/60">AI Engine</div>
                 {chatHistory.length > 0 && (
                   <button 
                     onClick={clearChat} 
-                    className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-muted hover:text-red-400 transition-colors"
+                    className="flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-muted hover:text-red-400 transition-colors"
                   >
-                    <Trash2 size={12} /> Clear
+                    <Trash2 size={10} /> Clear
                   </button>
                 )}
              </div>
-             <div className="flex bg-surface/30 p-1 rounded-2xl border border-border/30 relative h-10 w-full shadow-inner overflow-hidden">
+             <div className="flex bg-surface/40 p-1 rounded-xl border border-border/30 relative h-9 w-full shadow-inner overflow-hidden">
                 <div 
-                  className="absolute top-1 bottom-1 bg-accent2 rounded-xl transition-all duration-300 ease-out shadow-lg shadow-accent2/10 z-0"
+                  className="absolute top-1 bottom-1 bg-accent2 rounded-lg transition-all duration-300 ease-out shadow-lg shadow-accent2/10 z-0"
                   style={{ 
                     left: modelChoice === 'gemini' ? '4px' : 'calc(50% + 2px)', 
                     width: 'calc(50% - 6px)' 
@@ -211,17 +211,16 @@ export default function AIPage() {
                 
                 <button
                   onClick={() => setModelChoice('gemini')}
-                  className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                  className={`relative z-10 flex-1 flex items-center justify-center text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${
                     modelChoice === 'gemini' ? 'text-white' : 'text-muted hover:text-bright'
                   }`}
                 >
-                  {/* Smaller icons or just text */}
-                  <Zap size={10} className="mr-1.5" /> Gemini
+                  <Zap size={10} className="mr-1" /> Gemini
                 </button>
                 
                 <button
                   onClick={() => setModelChoice('openai')}
-                  className={`relative z-10 flex-1 flex items-center justify-center text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${
+                  className={`relative z-10 flex-1 flex items-center justify-center text-[9px] font-black uppercase tracking-widest transition-colors duration-300 ${
                     modelChoice === 'openai' ? 'text-white' : 'text-muted hover:text-bright'
                   }`}
                 >
@@ -297,21 +296,21 @@ export default function AIPage() {
         )}
 
         {chatHistory.map((msg, i) => (
-          <div key={i} className={`flex gap-4 sm:gap-6 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+          <div key={i} className={`flex gap-3 sm:gap-6 ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
             {msg.role === 'assistant' && (
-              <div className="w-10 h-10 rounded-[1.25rem] grad-accent flex items-center justify-center flex-shrink-0 mt-1 shadow-xl shadow-accent/20 border-2 border-white/10">
-                <Bot size={20} className="text-white" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-[0.8rem] sm:rounded-[1.25rem] grad-accent flex items-center justify-center flex-shrink-0 mt-1 shadow-xl shadow-accent/20 border-2 border-white/10">
+                <Bot size={16} className="text-white sm:w-5 sm:h-5" />
               </div>
             )}
-            <div className={`max-w-[90%] sm:max-w-2xl min-w-0 ${msg.role === 'user' ? 'order-first' : ''}`}>
+            <div className={`max-w-[85%] sm:max-w-2xl min-w-0 ${msg.role === 'user' ? 'order-first' : ''}`}>
               {msg.role === 'user' ? (
-                <div className="bg-accent/10 border-2 border-accent/20 rounded-[2rem] rounded-tr-sm px-6 py-4 text-[15px] font-medium text-text shadow-sm hover:border-accent/40 transition-colors">
+                <div className="bg-accent/10 border-2 border-accent/20 rounded-[1.5rem] rounded-tr-sm px-5 py-3.5 text-[14.5px] sm:text-[15px] font-medium text-text shadow-sm hover:border-accent/40 transition-colors">
                   {msg.content}
                 </div>
               ) : (
-                <div className="bg-card shadow-2xl border border-border/40 rounded-[2rem] rounded-tl-sm px-7 py-6 relative group overflow-hidden">
+                <div className="bg-card shadow-2xl border border-border/40 rounded-[1.5rem] rounded-tl-sm px-5 py-5 sm:px-7 sm:py-6 relative group overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 grad-accent opacity-[0.03] -translate-y-1/2 translate-x-1/2 rounded-full blur-2xl" />
-                  <div className="prose-dark relative z-10">
+                  <div className="prose-dark relative z-10 text-[14.5px] sm:text-[15.5px]">
                     <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                       {msg.content}
                     </ReactMarkdown>
@@ -333,8 +332,8 @@ export default function AIPage() {
               )}
             </div>
             {msg.role === 'user' && (
-              <div className="w-10 h-10 rounded-[1.25rem] bg-accent/20 border-2 border-accent/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <User size={20} className="text-accent" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-[0.8rem] sm:rounded-[1.25rem] bg-accent/20 border-2 border-accent/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <User size={16} className="text-accent sm:w-5 sm:h-5" />
               </div>
             )}
           </div>
@@ -359,34 +358,34 @@ export default function AIPage() {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 sm:p-6 bg-bg/80 backdrop-blur-2xl border-t border-border/40 relative z-30">
+      <div className="p-3 sm:p-6 bg-bg/80 backdrop-blur-2xl border-t border-border/40 relative z-30">
         <div className="max-w-3xl mx-auto relative group">
           <textarea
-            className="w-full bg-surface/30 border-2 border-border/40 hover:border-accent2/40 focus:border-accent2 rounded-[2rem] pl-6 pr-16 py-5 text-[15px] resize-none focus:outline-none focus:ring-8 focus:ring-accent2/5 transition-all min-h-[64px] custom-scrollbar shadow-2xl"
-            placeholder={aiMode === 'cs' ? "Deep dive into algorithms or architectures..." : "What's the next frontier of your curiosity?"}
+            className="w-full bg-surface/30 border border-border/40 hover:border-accent2/40 focus:border-accent2 rounded-2xl sm:rounded-[2rem] pl-5 pr-14 py-4 sm:py-5 text-[14px] sm:text-[15px] resize-none focus:outline-none focus:ring-8 focus:ring-accent2/5 transition-all min-h-[56px] custom-scrollbar shadow-2xl"
+            placeholder={aiMode === 'cs' ? "Architect your question..." : "Ask your assistant anything..."}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => {
               if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
             }}
             rows={1}
-            style={{ height: 'auto', minHeight: '64px' }}
+            style={{ height: 'auto', minHeight: '56px' }}
           />
           <button
             onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            className="absolute right-2.5 top-2.5 bottom-2.5 w-12 grad-accent !p-0 rounded-2xl shadow-xl shadow-accent/20 transition-all hover:scale-105 active:scale-90 disabled:opacity-20 disabled:hover:scale-100 flex items-center justify-center border-t border-white/20"
+            className="absolute right-2 top-2 bottom-2 w-11 sm:w-12 grad-accent !p-0 rounded-xl sm:rounded-2xl shadow-xl shadow-accent/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-20 disabled:hover:scale-100 flex items-center justify-center border-t border-white/20"
           >
             {loading ? (
-              <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 sm:border-3 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <Send size={22} className="text-white" />
+              <Send size={18} className="text-white sm:w-5 sm:h-5" />
             )}
           </button>
         </div>
-        <div className="flex items-center justify-center gap-6 mt-4">
-          <p className="text-[10px] text-muted font-black uppercase tracking-[0.2em] opacity-40">
-            Shift + Enter for new line • Enter to Command
+        <div className="flex items-center justify-center gap-6 mt-3 sm:mt-4">
+          <p className="text-[9px] text-muted font-black uppercase tracking-[0.2em] opacity-30">
+            ConceptFlow Intelligence v2.0
           </p>
         </div>
       </div>
