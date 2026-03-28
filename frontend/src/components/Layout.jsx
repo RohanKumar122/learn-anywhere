@@ -154,55 +154,71 @@ export default function Layout() {
           </>
         )}
 
-        {/* Bottom Navigation (Mobile Only) */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur-3xl border-t border-white/10 px-2 py-2.5 flex items-center justify-around z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-          {[
-            NAV[0], // Feed
-            NAV[1], // Discovery
-            NAV[2], // Neural Chat
-            NAV[6], // Create
-            NAV[5], // Bookmarks
-          ].map(({ path, icon: Icon, label }) => (
-            <NavLink
-              key={path}
-              to={path}
-              onClick={() => setMoreDrawerOpen(false)}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
-                  isActive
-                    ? 'text-accent2'
-                    : 'text-muted hover:text-bright'
-                }`
-              }
+        {/* Bottom Navigation (Mobile Only) - Professional Full-Width Glass */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+          <nav className="pointer-events-auto w-full bg-surface/60 backdrop-blur-2xl border-t border-white/10 px-6 py-3.5 rounded-t-[2.5rem] flex items-center justify-between shadow-[0_-10px_40px_rgba(0,0,0,0.4)] animate-slide-up relative z-50">
+            {/* Subtle Inner Glow */}
+            <div className="absolute inset-0 rounded-t-[2.5rem] border-t border-white/5 pointer-events-none" />
+            
+            {[
+              NAV[0], // Feed
+              NAV[1], // Discovery
+              NAV[2], // Neural Chat
+              NAV[6], // Create
+              NAV[5], // Bookmarks
+            ].map(({ path, icon: Icon, label }) => (
+              <NavLink
+                key={path}
+                to={path}
+                onClick={() => setMoreDrawerOpen(false)}
+                className={({ isActive }) =>
+                  `flex flex-col items-center justify-center gap-1.5 transition-all duration-300 relative group/nav ${
+                    isActive ? 'text-accent2' : 'text-muted hover:text-bright'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className="relative">
+                      <Icon 
+                        size={22} 
+                        className={`transition-all duration-300 transform ${
+                          isActive 
+                            ? 'scale-110 drop-shadow-[0_0_12px_rgba(233,69,96,0.5)]' 
+                            : 'opacity-70 group-hover/nav:scale-105'
+                        }`} 
+                      />
+                      {isActive && (
+                        <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-accent2 rounded-full shadow-[0_0_8px_rgba(233,69,96,0.3)]" />
+                      )}
+                    </div>
+                    <span className={`text-[9px] font-black tracking-[0.1em] uppercase transition-all duration-300 leading-none ${
+                        isActive ? 'opacity-100 mt-1.5' : 'opacity-40 group-hover/nav:opacity-60 mt-1'
+                      }`}>
+                      {label}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+            
+            <button
+              onClick={() => setMoreDrawerOpen(!moreDrawerOpen)}
+              className={`flex flex-col items-center justify-center gap-1.5 transition-all duration-300 relative ${
+                moreDrawerOpen ? 'text-accent2' : 'text-muted'
+              }`}
             >
-              {({ isActive }) => (
-                <>
-                  <div className="relative">
-                    <Icon size={22} className={`transition-all duration-300 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(233,69,96,0.3)]' : ''}`} />
-                    {isActive && (
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-accent2 rounded-full" />
-                    )}
-                  </div>
-                  <span className={`text-[9px] font-black tracking-widest uppercase transition-all duration-300 ${isActive ? 'opacity-100 mt-1' : 'opacity-60'}`}>
-                    {label}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          ))}
-          
-          <button
-            onClick={() => setMoreDrawerOpen(!moreDrawerOpen)}
-            className={`flex flex-col items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
-              moreDrawerOpen ? 'text-accent2' : 'text-muted'
-            }`}
-          >
-            <div className="relative">
-              <MoreHorizontal size={22} className="transition-transform duration-300" />
-            </div>
-            <span className="text-[9px] font-black tracking-widest uppercase opacity-60">Menu</span>
-          </button>
-        </nav>
+              <div className="relative">
+                <MoreHorizontal size={22} className={`transition-all duration-300 ${moreDrawerOpen ? 'rotate-90 scale-110' : 'opacity-70'}`} />
+              </div>
+              <span className={`text-[9px] font-black tracking-[0.1em] uppercase transition-all duration-300 leading-none ${
+                moreDrawerOpen ? 'opacity-100 mt-1.5' : 'opacity-40 mt-1'
+              }`}>
+                Menu
+              </span>
+            </button>
+          </nav>
+        </div>
       </div>
     </div>
   )
