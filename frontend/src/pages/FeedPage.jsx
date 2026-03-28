@@ -284,33 +284,33 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-accent2/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
       {/* Top row */}
-      <div className="flex items-start justify-between gap-3 mb-4 relative z-10">
+      <div className="flex items-start justify-between gap-3 mb-4 relative z-10 transition-transform group-hover:-translate-y-0.5">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`badge border-2 shadow-sm ${DIFF_COLORS[doc.difficulty] || DIFF_COLORS.Medium}`}>
+          <span className={`badge border-2 shadow-sm font-black transition-all group-hover:shadow-accent2/20 ${DIFF_COLORS[doc.difficulty] || DIFF_COLORS.Medium}`}>
             {doc.difficulty}
           </span>
           {!isEditing && (
-            <span className={`badge bg-surface/50 border border-border/30 backdrop-blur-sm ${CAT_COLORS[doc.category] || CAT_COLORS.Other}`}>
+            <span className={`badge bg-surface/60 border border-border/20 backdrop-blur-md font-black shadow-sm ${CAT_COLORS[doc.category] || CAT_COLORS.Other}`}>
               {doc.category}
             </span>
           )}
           {doc.is_ai_generated && !isEditing && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-accent/10 text-accent border border-accent/20">
-              <Bot size={10} /> AI
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] bg-accent/20 text-accent border border-accent/30 shadow-sm animate-pulse">
+              <Bot size={11} /> Neural
             </div>
           )}
         </div>
         
         {isEditing ? (
-           <span className="text-[10px] font-black uppercase tracking-widest text-accent2 animate-pulse">Edit Mode Active</span>
+           <span className="text-[10px] font-black uppercase tracking-widest text-accent2 animate-pulse bg-accent2/10 px-2.5 py-1 rounded-lg">Edit Active</span>
         ) : (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 text-[10px] font-black text-muted bg-surface/40 px-2 py-1.5 rounded-lg border border-border/10 shadow-sm transition-colors hover:bg-surface/60">
-              <Calendar size={12} className="text-accent" />
+            <div className="flex items-center gap-1.5 text-[10px] font-black text-muted/80 bg-surface/50 px-2.5 py-1.5 rounded-xl border border-border/10 shadow-sm transition-all hover:bg-surface/80">
+              <Calendar size={13} className="text-accent" />
               {doc.created_at ? new Date(doc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today'}
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] font-black text-muted bg-surface/40 px-2 py-1.5 rounded-lg border border-border/10 shadow-sm transition-colors hover:bg-surface/60">
-              <Clock size={12} className="text-accent2" />
+            <div className="flex items-center gap-1.5 text-[10px] font-black text-muted/80 bg-surface/50 px-2.5 py-1.5 rounded-xl border border-border/10 shadow-sm transition-all hover:bg-surface/80">
+              <Clock size={13} className="text-accent2" />
               {doc.read_time_minutes}m
             </div>
           </div>
@@ -470,11 +470,11 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="flex items-center gap-2 p-2.5 rounded-2xl text-muted hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 active:bg-red-500/20"
+                    className="flex items-center gap-2 p-2.5 rounded-2xl text-muted/60 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 active:scale-95 group/del"
                     title="Delete Card"
                   >
-                    <Trash2 size={16} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Del</span>
+                    <Trash2 size={16} className="group-hover/del:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.1em]">Eliminate</span>
                   </button>
                 </div>
               )}

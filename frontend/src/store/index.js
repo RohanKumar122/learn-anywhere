@@ -33,6 +33,16 @@ export const useAppStore = create((set, get) => ({
   appendFeed: (docs, hasMore, page) => set((s) => ({ feedDocs: [...s.feedDocs, ...docs], feedHasMore: hasMore, feedPage: page })),
   setFeedFilter: (category, difficulty) => set({ feedCategory: category, feedDifficulty: difficulty, feedDocs: [], feedPage: 1, feedHasMore: true }),
 
+  // Discovery state
+  discoveryDocs: [],
+  discoveryPage: 1,
+  discoveryHasMore: true,
+  discoveryCategory: null,
+  discoveryDifficulty: null,
+  setDiscovery: (docs, hasMore, page) => set({ discoveryDocs: docs, discoveryHasMore: hasMore, discoveryPage: page }),
+  appendDiscovery: (docs, hasMore, page) => set((s) => ({ discoveryDocs: [...s.discoveryDocs, ...docs], discoveryHasMore: hasMore, discoveryPage: page })),
+  setDiscoveryFilter: (category, difficulty) => set({ discoveryCategory: category, discoveryDifficulty: difficulty, discoveryDocs: [], discoveryPage: 1, discoveryHasMore: true }),
+
   // AI state
   chatHistory: [],
   modelChoice: localStorage.getItem('cf_model') || 'gemini',

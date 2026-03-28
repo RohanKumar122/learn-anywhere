@@ -42,67 +42,86 @@ function DiscoveryCard({ doc, onBookmark, onAddRevision, onAskAI }) {
     } catch { toast.error('Failed') }
   }
 
+  const { user } = useAuthStore()
+  const isOwner = user?.id === doc.owner_id
+
   return (
     <div 
-      className="feed-card card hover-lift group relative overflow-hidden flex flex-col min-h-[220px]"
+      className="feed-card card !p-6 hover-lift group relative overflow-hidden flex flex-col min-h-[250px] bg-card/10 backdrop-blur-xl border-border/20 transition-all duration-500"
       onClick={() => navigate(`/docs/${doc.id}`)}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-accent2/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
-      <div className="flex items-start justify-between gap-3 mb-4 relative z-10">
-        <span className={`badge border-2 shadow-sm ${DIFF_COLORS[doc.difficulty] || DIFF_COLORS.Medium}`}>
-          {doc.difficulty}
-        </span>
-        <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted bg-surface/30 px-2 py-1 rounded-lg border border-border/20">
-          <Clock size={12} className="text-accent2" />
+      <div className="flex items-start justify-between gap-3 mb-5 relative z-10 transition-transform group-hover:-translate-y-0.5">
+        <div className="flex gap-2">
+          <span className={`badge border-2 shadow-sm font-black transition-all group-hover:shadow-accent2/20 py-1 px-3 ${DIFF_COLORS[doc.difficulty] || DIFF_COLORS.Medium}`}>
+            {doc.difficulty}
+          </span>
+          {doc.is_ai_generated && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] bg-accent/20 text-accent border border-accent/40 shadow-sm animate-pulse">
+              <Bot size={11} /> Neural
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-black text-muted/80 bg-surface/50 px-3 py-1.5 rounded-xl border border-border/10 shadow-sm">
+          <Clock size={13} className="text-accent2" />
           {doc.read_time_minutes}m
         </div>
       </div>
 
       <div className="relative z-10 flex-1">
-        <h3 className="font-bold text-bright text-lg mb-2.5 group-hover:text-accent font-display leading-[1.2]">
+        <h3 className="font-black text-bright text-xl mb-3 group-hover:text-accent font-display leading-tight tracking-tight">
           {doc.title}
         </h3>
-        <p className="text-muted text-sm line-clamp-2 mb-4 leading-relaxed opacity-80 group-hover:opacity-100">
-          {doc.summary || 'Tap to explore this concept...'}
+        <p className="text-muted/90 text-[13.5px] line-clamp-2 mb-6 leading-relaxed opacity-90 group-hover:opacity-100">
+          {doc.summary || 'Tap to explore this neural architecture...'}
         </p>
         
-        <div className="flex items-center gap-2 mt-auto pb-4">
-           <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center text-[8px] font-black text-accent uppercase border border-accent/20">
+        <div className="flex items-center gap-3 mt-auto pb-6">
+           <div className="w-7 h-7 rounded-full grad-accent flex items-center justify-center text-[10px] font-black text-white uppercase border border-white/10 shadow-lg">
               {doc.owner_name?.[0] || 'U'}
            </div>
-           <span className="text-[10px] font-bold text-muted/60 uppercase tracking-widest leading-none">
-             Archived by <span className="text-accent2/80">{doc.owner_name || 'Anonymous'}</span>
+           <span className="text-[10px] font-black text-muted/70 uppercase tracking-widest leading-none">
+             Archived by <span className="text-accent2/90">{doc.owner_name || 'Anonymous'}</span>
            </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 pt-4 border-t border-border/40 mt-auto relative z-10">
+      <div className="flex items-center gap-3 pt-5 border-t border-border/10 mt-auto relative z-10">
         <button
           onClick={handleBookmark}
-          className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-all duration-300 ${
-            bookmarked ? 'text-accent2 bg-accent2/10 shadow-inner' : 'text-muted hover:text-accent2 hover:bg-accent2/5'
+          className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-2xl transition-all duration-300 transform active:scale-95 ${
+            bookmarked ? 'text-accent2 bg-accent2/10 shadow-lg shadow-accent2/5 border border-accent2/30' : 'text-muted hover:text-accent2 hover:bg-accent2/5'
           }`}
         >
-          <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
+          <Bookmark size={15} fill={bookmarked ? 'currentColor' : 'none'} />
           <span>{bookmarked ? 'Saved' : 'Save'}</span>
         </button>
         
         <button
           onClick={handleRevision}
-          className={`flex-center-gap text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-all ${
-            inRevision ? 'text-yellow-400 bg-yellow-400/10 shadow-inner' : 'text-muted hover:text-yellow-400 hover:bg-yellow-400/5'
+          className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 py-2.5 rounded-2xl transition-all duration-300 transform active:scale-95 ${
+            inRevision ? 'text-yellow-400 bg-yellow-400/10 shadow-lg shadow-yellow-400/5 border border-yellow-400/30' : 'text-muted hover:text-yellow-400 hover:bg-yellow-400/5'
           }`}
         >
-          <RotateCcw size={14} />
+          <RotateCcw size={15} />
           <span>Revise</span>
         </button>
 
+        {isOwner && (
+           <button
+             onClick={(e) => { e.stopPropagation(); toast.error('Use the Library to delete your own docs.') }}
+             className="p-2.5 rounded-2xl text-muted/60 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 group/del"
+           >
+             <Trash2 size={16} className="group-hover/del:scale-110" />
+           </button>
+        )}
+
         <button
           onClick={(e) => { e.stopPropagation(); onAskAI(doc) }}
-          className="ml-auto p-2 rounded-xl text-muted hover:text-accent hover:bg-accent/10 transition-all duration-300"
+          className="ml-auto p-2.5 rounded-2xl text-muted/60 hover:text-accent hover:bg-accent/10 transition-all duration-300 active:scale-90"
         >
-          <Bot size={18} />
+          <Bot size={20} />
         </button>
       </div>
     </div>
@@ -111,46 +130,53 @@ function DiscoveryCard({ doc, onBookmark, onAddRevision, onAskAI }) {
 
 export default function DiscoveryPage() {
   const navigate = useNavigate()
-  const [docs, setDocs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
-  const [filter, setFilter] = useState({ category: 'All', difficulty: 'All' })
+  const { 
+    discoveryDocs: docs, discoveryPage: page, discoveryHasMore: hasMore, 
+    discoveryCategory: category, discoveryDifficulty: difficulty,
+    setDiscovery, appendDiscovery, setDiscoveryFilter
+  } = useAppStore()
+  
+  const [loading, setLoading] = useState(false)
   const loaderRef = useRef(null)
+  const isInitialMount = useRef(true)
 
   const loadDocs = useCallback(async (pg = 1, isReset = false) => {
+    if (loading) return
     setLoading(true)
     try {
       const params = {
         page: pg,
-        category: filter.category === 'All' ? null : filter.category,
-        difficulty: filter.difficulty === 'All' ? null : filter.difficulty
+        category: category,
+        difficulty: difficulty
       }
       const { data } = await feedAPI.getPublic(params)
       if (isReset) {
-        setDocs(data.feed)
+        setDiscovery(data.feed, data.has_more, pg)
       } else {
-        setDocs(prev => [...prev, ...data.feed])
+        appendDiscovery(data.feed, data.has_more, pg)
       }
-      setHasMore(data.has_more)
-      setPage(data.page)
     } catch {
       toast.error('Failed to load discovery feed')
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [category, difficulty, loading, setDiscovery, appendDiscovery])
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      if (docs.length === 0) loadDocs(1, true)
+      return
+    }
     loadDocs(1, true)
-  }, [filter])
+  }, [category, difficulty])
 
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore && !loading) {
         loadDocs(page + 1)
       }
-    }, { threshold: 1.0 })
+    }, { threshold: 0.5 })
 
     if (loaderRef.current) observer.observe(loaderRef.current)
     return () => observer.disconnect()
@@ -176,9 +202,9 @@ export default function DiscoveryPage() {
         {['All', 'DSA', 'System Design', 'OS', 'DBMS', 'CN'].map(c => (
            <button 
              key={c}
-             onClick={() => setFilter({ ...filter, category: c })}
+             onClick={() => setDiscoveryFilter(c === 'All' ? null : c, difficulty)}
              className={`px-5 py-2 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all border-2 ${
-               filter.category === c 
+               (c === 'All' && !category) || category === c
                  ? 'bg-accent text-white border-accent shadow-lg shadow-accent/20' 
                  : 'bg-surface/40 text-muted border-border/40 hover:border-accent/30 hover:text-bright'
              }`}
