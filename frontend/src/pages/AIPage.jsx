@@ -8,13 +8,22 @@ import { useAppStore } from '../store'
 import { Send, Bot, User, Save, Tag, Trash2, Sparkles, X, Zap } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const QUICK_PROMPTS = [
-  'Explain Binary Search with examples',
-  'Design a URL shortener system',
-  'What is the difference between TCP and UDP?',
-  'Explain CAP theorem in simple terms',
-  'How does HashMap work internally?',
-  'Explain OS scheduling algorithms',
+const CS_PROMPTS = [
+  'Explain Binary Search with analogies',
+  'Design a horizontal scaling SQL architecture',
+  'Difference between TCP and UDP in real-time gaming',
+  'How does a HashMap handle collisions? (Java/Python)',
+  'Explain the CAP theorem for distributed systems',
+  'Deep dive: OS context switching internals',
+]
+
+const GENERAL_PROMPTS = [
+  'Draft a professional email for a project delay',
+  'Explain Quantum Computing for a five-year-old',
+  'Summarize the core concepts of stoicism',
+  'Brainstorm 5 creative app ideas for local communities',
+  'How to prepare for a first-time manager role?',
+  'Explain the physics of a black hole simply',
 ]
 
 function SaveDocModal({ content, onClose, onSave }) {
@@ -258,18 +267,28 @@ export default function AIPage() {
             </p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl px-2">
-              {QUICK_PROMPTS.slice(0, 4).map((p, idx) => (
+              {(aiMode === 'cs' ? CS_PROMPTS : GENERAL_PROMPTS).slice(0, 4).map((p, idx) => (
                 <button
                   key={p}
                   onClick={() => sendMessage(p)}
-                  className="group text-left p-5 rounded-3xl border-2 border-border/40 bg-card/20 hover:border-accent2/40 hover:bg-accent2/5 transition-all duration-300 hover-lift shadow-lg"
+                  className={`group text-left p-5 rounded-3xl border-2 transition-all duration-300 hover-lift shadow-lg ${
+                    aiMode === 'cs' 
+                      ? 'border-accent2/20 bg-accent2/5 hover:border-accent2/40 hover:bg-accent2/10' 
+                      : 'border-accent/20 bg-accent/5 hover:border-accent/40 hover:bg-accent/10'
+                  }`}
                   style={{ animationDelay: `${idx * 100}ms` }}
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-2xl bg-surface flex items-center justify-center group-hover:bg-accent2/20 transition-all border border-border/30 group-hover:border-accent2/30">
-                      <Sparkles size={16} className="text-muted group-hover:text-accent2" />
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all border ${
+                      aiMode === 'cs' 
+                        ? 'bg-surface border-accent2/30 group-hover:bg-accent2/20 group-hover:border-accent2/30' 
+                        : 'bg-surface border-accent/30 group-hover:bg-accent/20 group-hover:border-accent/30'
+                    }`}>
+                      {aiMode === 'cs' 
+                        ? <Zap size={16} className="text-accent2" /> 
+                        : <Sparkles size={16} className="text-accent" />}
                     </div>
-                    <span className="text-sm font-bold text-muted group-hover:text-bright transition-colors">{p}</span>
+                    <span className="text-sm font-bold text-muted group-hover:text-bright transition-colors line-clamp-2">{p}</span>
                   </div>
                 </button>
               ))}
