@@ -186,7 +186,8 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
   const [inRevision, setInRevision] = useState(false)
   const [isRead, setIsRead] = useState(doc.is_read)
   const [isPublic, setIsPublic] = useState(doc.is_public)
-  const isEditing = editId === doc.id
+  const [isInlineEditing, setIsInlineEditing] = useState(false)
+  const isEditing = (editId === doc.id) || isInlineEditing
   const [editForm, setEditForm] = useState({ title: doc.title, summary: doc.summary || '' })
   const isOwner = user?.id === doc.owner_id
 
@@ -230,37 +231,21 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
     } catch { toast.error('Failed') }
   }
 
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-
-  const handleDelete = async (e) => {
+  const handleDelete = (e) => {
     e.stopPropagation()
-    setShowConfirm(true)
-  }
-
-  const confirmDelete = async () => {
-    setDeleting(true)
-    try {
-      await onDelete(doc.id)
-      toast.success('Document deleted successfully')
-    } catch { 
-      toast.error('Failed to eliminate document') 
-    } finally { 
-      setDeleting(false)
-      setShowConfirm(false)
-    }
+    onDelete(doc.id) // This now triggers the parent's confirmation state
   }
 
   const handleEditToggle = (e) => {
     e.stopPropagation()
-    setIsEditing(!isEditing)
+    setIsInlineEditing(!isInlineEditing)
   }
 
   const handleSaveInline = async (e) => {
     e.stopPropagation()
     try {
       await onSave(doc.id, { ...doc, ...editForm })
-      setIsEditing(false)
+      setIsInlineEditing(false)
       toast.success('Updated in-place')
     } catch { toast.error('Update failed') }
   }
@@ -409,7 +394,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
               </button>
               <button onClick={handleEditToggle} className="btn-ghost flex-1 py-1.5 text-xs font-black uppercase">Cancel</button>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); onEdit(doc.id); setIsEditing(false) }} 
+            <button onClick={(e) => { e.stopPropagation(); onEdit(doc.id); setIsInlineEditing(false) }} 
                     className="w-full sm:w-auto text-[9px] font-black uppercase tracking-widest text-muted/60 hover:text-accent transition-colors py-1">
               Deep Architect Mode
             </button>
@@ -503,17 +488,6 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
           <CheckCircle size={12} className="text-green-400 -rotate-45" />
         </div>
       )}
-
-      {/* Better Confirm Modal */}
-      {showConfirm && (
-        <ConfirmModal
-          title="Eliminate Doc?"
-          message={`Are you sure you want to remove "${doc.title}"? This cannot be undone.`}
-          loading={deleting}
-          onConfirm={confirmDelete}
-          onClose={() => setShowConfirm(false)}
-        />
-      )}
     </div>
   )
 }
@@ -522,10 +496,11 @@ export default function FeedPage() {
   const { 
     feedDocs: docs, feedPage: page, feedHasMore: hasMore, 
     feedCategory: category, feedDifficulty: difficulty,
-    setFeed, appendFeed, setFeedFilter
+    setFeed, appendFeed, setFeedFilter, removeFeedDoc
   } = useAppStore()
   
   const [loading, setLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
   const [processingPdf, setProcessingPdf] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [editorModal, setEditorModal] = useState({ open: false, id: null, initialContent: null, initialTitle: null })
@@ -554,9 +529,19 @@ export default function FeedPage() {
     }
   }, [category, difficulty, loading, setFeed, appendFeed])
 
-  const handleDeleteDoc = async (id) => {
-    await docsAPI.delete(id)
-    setFeed(docs.filter(d => d.id !== id), hasMore, page)
+  const handleDeleteDoc = async () => {
+    if (!deletingId) return
+    setLoading(true)
+    try {
+      await docsAPI.delete(deletingId)
+      removeFeedDoc(deletingId)
+      toast.success('Knowledge eliminated successfully')
+      setDeletingId(null)
+    } catch {
+      toast.error('Failed to eliminate knowledge')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSaveDoc = async (editId, docData) => {
@@ -754,12 +739,29 @@ export default function FeedPage() {
               onBookmark={(id) => docsAPI.bookmark(id)}
               onAddRevision={handleRevision}
               onMarkRead={handleMarkRead}
-              onDelete={handleDeleteDoc}
+              onDelete={(id) => setDeletingId(id)}
               onEdit={(id) => setEditorModal({ open: true, id })}
               onSave={handleSaveDoc}
+              editId={editorModal.id}
             />
           </div>
         ))}
+
+        {!loading && docs.length === 0 && (
+          <div className="text-center py-20 bg-surface/20 rounded-3xl border border-dashed border-border/50">
+            <div className="w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto mb-6">
+              <Filter className="text-muted" size={32} />
+            </div>
+            <h3 className="font-bold text-bright text-xl mb-2">No documents found</h3>
+            <p className="text-muted text-sm max-w-xs mx-auto">Try adjusting your filters or creating a new document to start your feed.</p>
+            <button 
+              onClick={() => { setFeedFilter(null, null); setShowFilters(false) }}
+              className="mt-6 btn-ghost mx-auto"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
 
         {/* Pagination Controls */}
         {docs.length > 0 && (
@@ -803,24 +805,17 @@ export default function FeedPage() {
             </button>
           </div>
         )}
-
-
-        {!loading && docs.length === 0 && (
-          <div className="text-center py-20 bg-surface/20 rounded-3xl border border-dashed border-border/50">
-            <div className="w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto mb-6">
-              <Filter className="text-muted" size={32} />
-            </div>
-            <h3 className="font-bold text-bright text-xl mb-2">No documents found</h3>
-            <p className="text-muted text-sm max-w-xs mx-auto">Try adjusting your filters or creating a new document to start your feed.</p>
-            <button 
-              onClick={() => { setFeedFilter(null, null); setShowFilters(false) }}
-              className="mt-6 btn-ghost mx-auto"
-            >
-              Clear all filters
-            </button>
-          </div>
-        )}
       </div>
+
+      {deletingId && (
+        <ConfirmModal
+          title="Eliminate Knowledge?"
+          message={`Are you sure you want to remove "${docs.find(d => d.id === deletingId)?.title}"? This action cannot be reversed.`}
+          loading={loading}
+          onConfirm={handleDeleteDoc}
+          onClose={() => setDeletingId(null)}
+        />
+      )}
 
       {/* Inline Editor Modal */}
       {editorModal.open && (

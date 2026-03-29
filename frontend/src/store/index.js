@@ -31,6 +31,7 @@ export const useAppStore = create((set, get) => ({
 
   setFeed: (docs, hasMore, page) => set({ feedDocs: docs, feedHasMore: hasMore, feedPage: page }),
   appendFeed: (docs, hasMore, page) => set((s) => ({ feedDocs: [...s.feedDocs, ...docs], feedHasMore: hasMore, feedPage: page })),
+  removeFeedDoc: (id) => set((s) => ({ feedDocs: s.feedDocs.filter(d => d.id !== id) })),
   setFeedFilter: (category, difficulty) => set({ feedCategory: category, feedDifficulty: difficulty, feedDocs: [], feedPage: 1, feedHasMore: true }),
 
   // Discovery state
