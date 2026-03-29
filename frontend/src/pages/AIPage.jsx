@@ -5,8 +5,60 @@ import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import { aiAPI } from '../api'
 import { useAppStore } from '../store'
-import { Send, Bot, User, Save, Tag, Trash2, Sparkles, X, Zap } from 'lucide-react'
+import { Send, Bot, User, Save, Tag, Trash2, Sparkles, X, Zap, Copy, Check } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+    toast.success('Copied to clipboard!')
+  }
+  return (
+    <button 
+      onClick={handleCopy}
+      className="absolute top-3 right-3 p-2 bg-bg/60 backdrop-blur-md rounded-xl text-muted/60 hover:text-accent2 hover:bg-bg/80 border border-white/5 transition-all opacity-0 group-hover/code:opacity-100 z-10"
+      title="Copy code"
+    >
+      {copied ? <Check size={14} className="text-accent2" /> : <Copy size={14} />}
+    </button>
+  )
+}
+
+const MarkdownComponents = {
+  code({ node, inline, className, children, ...props }) {
+    const match = /language-(\w+)/.exec(className || '')
+    
+    // Robust text extraction from highlighted children (spans)
+    const extractText = (child) => {
+       if (typeof child === 'string') return child
+       if (Array.isArray(child)) return child.map(extractText).join('')
+       if (child?.props?.children) return extractText(child.props.children)
+       return ''
+    }
+    const codeText = extractText(children)
+    
+    return !inline ? (
+      <div className="relative group/code my-6">
+        <div className="absolute top-0 left-4 -translate-y-1/2 px-3 py-1 bg-surface border border-border/30 rounded-lg text-[10px] font-black uppercase tracking-widest text-muted z-10">
+          {match ? match[1] : 'code'}
+        </div>
+        <CopyButton text={codeText} />
+        <pre className={`${className} !bg-black/40 !p-6 rounded-2xl border border-white/5 overflow-x-auto custom-scrollbar`}>
+          <code {...props} className={className}>
+            {children}
+          </code>
+        </pre>
+      </div>
+    ) : (
+      <code className="bg-surface/80 text-accent2 px-1.5 py-0.5 rounded-lg font-mono text-[0.85em] border border-border/20" {...props}>
+        {children}
+      </code>
+    )
+  }
+}
 
 const CS_PROMPTS = [
   'Architecting for Scale: Design a real-time notification system for 10M+ users.',
@@ -308,10 +360,16 @@ export default function AIPage() {
                   {msg.content}
                 </div>
               ) : (
-                <div className="bg-card shadow-2xl border border-border/40 rounded-[1.5rem] rounded-tl-sm px-5 py-5 sm:px-7 sm:py-6 relative group overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 grad-accent opacity-[0.03] -translate-y-1/2 translate-x-1/2 rounded-full blur-2xl" />
-                  <div className="prose-dark relative z-10 text-[14.5px] sm:text-[15.5px]">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                <div className="bg-card shadow-2xl border border-border/30 rounded-[2rem] rounded-tl-sm px-5 py-6 sm:px-8 sm:py-8 relative group overflow-hidden transition-all hover:border-border/60">
+                  <div className="absolute top-0 right-0 w-48 h-48 grad-accent opacity-[0.04] -translate-y-1/2 translate-x-1/2 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent2 opacity-[0.02] translate-y-1/3 -translate-x-1/3 rounded-full blur-3xl pointer-events-none" />
+                  
+                  <div className="prose-dark relative z-10 text-[14.5px] sm:text-[15.5px] leading-relaxed">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]} 
+                      rehypePlugins={[rehypeHighlight]}
+                      components={MarkdownComponents}
+                    >
                       {msg.content}
                     </ReactMarkdown>
                   </div>

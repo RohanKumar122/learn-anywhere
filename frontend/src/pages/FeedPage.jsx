@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { feedAPI, docsAPI, aiAPI } from '../api'
 import { useAppStore } from '../store'
-import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X, FileText, Upload, Zap, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Clock, Bookmark, RotateCcw, CheckCircle, ChevronDown, Filter, Trash2, Bot, Plus, X, FileText, Upload, Zap, Calendar, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react'
 import * as pdfjs from 'pdfjs-dist'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { useAuthStore } from '../store'
@@ -272,6 +272,18 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
     }
   }
 
+  const codeMatch = doc.content?.match(/```(?:\w+)?\n([\s\S]*?)```/) || doc.summary?.match(/```(?:\w+)?\n([\s\S]*?)```/)
+  const [copied, setCopied] = useState(false)
+  const handleCopyCode = (e) => {
+    e.stopPropagation()
+    if (codeMatch) {
+      navigator.clipboard.writeText(codeMatch[1].trim())
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+      toast.success('Code copied!')
+    }
+  }
+
   return (
     <div
       className={`feed-card card group relative overflow-hidden flex flex-col transition-all duration-300 ${
@@ -456,6 +468,19 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                 <Bot size={15} />
                 <span className="text-[10px] font-bold">Ask AI</span>
               </button>
+
+              {codeMatch && (
+                <button
+                  onClick={handleCopyCode}
+                  className={`flex items-center gap-1 p-2 rounded-xl transition-all duration-300 ${
+                    copied ? 'text-accent2 bg-accent2/10' : 'text-muted hover:text-accent2 hover:bg-accent2/10'
+                  }`}
+                  title="Copy detected code snippet"
+                >
+                  {copied ? <Check size={15} /> : <Copy size={15} />}
+                  <span className="text-[10px] font-bold">Copy</span>
+                </button>
+              )}
               
               {isOwner && (
                 <div className="flex items-center gap-1 border-l border-border/30 ml-1 pl-1">

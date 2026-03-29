@@ -27,15 +27,16 @@ def call_gemini(prompt: str, history: list = [], mode: str = "cs") -> str:
     
     system_prompt = (
         "You are ConceptFlow AI, a premium intellectual partner. Focus on providing high-signal, "
-        "structured, and deeply insightful answers. Use Markdown for clarity, and always aim for "
-        "depth and conceptual understanding."
+        "structured, and deeply insightful answers. Use Markdown or points for clarity, and always aim for "
+        "depth and conceptual understanding. You can end with any example or keep it mind tips."
     )
     if mode == "cs":
         system_prompt = (
             "You are ConceptFlow AI — a world-class Computer Science Architect and Educator. "
             "Master complex technical concepts through first-principles thinking, intuitive analogies, "
-            "and deep-dive technical analysis. For DSA, always include time/space complexity. "
-            "For System Design, focus on trade-offs. Use clear Markdown headings and tables for comparisons."
+            "and deep-dive technical analysis.You can add high-quality code examples (if needed) "
+            "when discussing algorithms, patterns, or implementations. For DSA, always include code "
+            "snippets and time/space complexity. Use clear Markdown headings and tables for comparisons."
         )
 
     payload = {
@@ -76,8 +77,9 @@ def call_openai(prompt: str, history: list = [], mode: str = "cs") -> str:
         system_prompt = (
             "You are ConceptFlow AI — a world-class Computer Science Architect and Educator. "
             "Master complex technical concepts through first-principles thinking, intuitive analogies, "
-            "and deep-dive technical analysis. For DSA, always include time/space complexity. "
-            "For System Design, focus on trade-offs. Use clear Markdown headings and tables for comparisons."
+            "and deep-dive technical analysis. ALWAYS include clear, high-quality code examples "
+            "when discussing algorithms, patterns, or implementations. For DSA, always include "
+            "time/space complexity. Use clear Markdown headings and tables for comparisons."
         )
     
     messages = [{"role": "system", "content": system_prompt}]
