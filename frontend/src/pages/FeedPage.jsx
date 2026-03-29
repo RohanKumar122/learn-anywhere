@@ -448,7 +448,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                 title="Open Quiz"
               >
                 <Zap size={15} />
-                <span className="text-[10px] font-bold">Quiz</span>
+                <span className="hidden sm:inline text-[10px] font-bold">Quiz</span>
               </button>
 
               <button
@@ -457,7 +457,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                 title="Format with AI"
               >
                 <Bot size={15} />
-                <span className="text-[10px] font-bold">Format</span>
+                <span className="hidden sm:inline text-[10px] font-bold">Format</span>
               </button>
 
               <button
@@ -466,7 +466,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                 title="Ask AI about this"
               >
                 <Bot size={15} />
-                <span className="text-[10px] font-bold">Ask AI</span>
+                <span className="hidden sm:inline text-[10px] font-bold">Ask AI</span>
               </button>
 
               {codeMatch && (
@@ -478,7 +478,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                   title="Copy detected code snippet"
                 >
                   {copied ? <Check size={15} /> : <Copy size={15} />}
-                  <span className="text-[10px] font-bold">Copy</span>
+                  <span className="hidden sm:inline text-[10px] font-bold">Copy</span>
                 </button>
               )}
               
@@ -490,7 +490,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                     title="Edit Card In-Place"
                   >
                     <div className="w-3 h-3 flex items-center justify-center text-xs font-bold">✎</div>
-                    <span className="text-[10px] font-bold">Edit</span>
+                    <span className="hidden sm:inline text-[10px] font-bold">Edit</span>
                   </button>
                   <button
                     onClick={handleDelete}
@@ -498,7 +498,7 @@ function FeedCard({ doc, onBookmark, onAddRevision, onMarkRead, onDelete, onEdit
                     title="Delete Card"
                   >
                     <Trash2 size={16} className="group-hover/del:scale-110 transition-transform" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.1em]">Eliminate</span>
+                    <span className="hidden sm:inline text-[10px] font-black uppercase tracking-[0.1em]">Eliminate</span>
                   </button>
                 </div>
               )}
