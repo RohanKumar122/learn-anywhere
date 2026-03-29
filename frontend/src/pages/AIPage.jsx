@@ -9,21 +9,21 @@ import { Send, Bot, User, Save, Tag, Trash2, Sparkles, X, Zap } from 'lucide-rea
 import toast from 'react-hot-toast'
 
 const CS_PROMPTS = [
-  'Explain Binary Search with analogies',
-  'Design a horizontal scaling SQL architecture',
-  'Difference between TCP and UDP in real-time gaming',
-  'How does a HashMap handle collisions? (Java/Python)',
-  'Explain the CAP theorem for distributed systems',
-  'Deep dive: OS context switching internals',
+  'Architecting for Scale: Design a real-time notification system for 10M+ users.',
+  'Mastering Concurrent Systems: How do Mutexes and Semaphores actually work?',
+  'The Art of Clean Code: Analyze trade-offs between Composition vs Inheritance.',
+  'Building a Search Engine: Explain the internal workings of an Inverted Index.',
+  'How does a HashMap handle collisions? (Detailed JVM/Python analysis)',
+  'Demystifying zero-knowledge proofs in modern blockchain privacy.',
 ]
 
 const GENERAL_PROMPTS = [
-  'Draft a professional email for a project delay',
-  'Explain Quantum Computing for a five-year-old',
-  'Summarize the core concepts of stoicism',
-  'Brainstorm 5 creative app ideas for local communities',
-  'How to prepare for a first-time manager role?',
-  'Explain the physics of a black hole simply',
+  'Hyper-Productivity: Draft a 4-week roadmap to master Public Speaking.',
+  'Neuroscience of Focus: How deep work affects long-term memory formation.',
+  'Stoicism in Chaos: Applying "Premeditatio Malorum" to project management.',
+  'Future of AI: 3 ways LLMs will transform the education sector by 2030.',
+  'Critical Thinking: Summarize the most influential mental models for decision making.',
+  'Summarize the physics of black holes using a musical instrument analogy.',
 ]
 
 function SaveDocModal({ content, onClose, onSave }) {

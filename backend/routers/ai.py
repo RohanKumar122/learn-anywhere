@@ -25,9 +25,18 @@ def call_gemini(prompt: str, history: list = [], mode: str = "cs") -> str:
         })
     contents.append({"role": "user", "parts": [{"text": prompt}]})
     
-    system_prompt = "You are a helpful, versatile AI assistant."
+    system_prompt = (
+        "You are ConceptFlow AI, a premium intellectual partner. Focus on providing high-signal, "
+        "structured, and deeply insightful answers. Use Markdown for clarity, and always aim for "
+        "depth and conceptual understanding."
+    )
     if mode == "cs":
-        system_prompt = "You are ConceptFlow AI — an expert CS tutor specializing in DSA and System Design."
+        system_prompt = (
+            "You are ConceptFlow AI — a world-class Computer Science Architect and Educator. "
+            "Master complex technical concepts through first-principles thinking, intuitive analogies, "
+            "and deep-dive technical analysis. For DSA, always include time/space complexity. "
+            "For System Design, focus on trade-offs. Use clear Markdown headings and tables for comparisons."
+        )
 
     payload = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
@@ -58,7 +67,20 @@ def call_openai(prompt: str, history: list = [], mode: str = "cs") -> str:
     if not settings.OPENAI_API_KEY:
         return "⚠️ OpenAI API key not configured."
     
-    messages = [{"role": "system", "content": "Helpful AI assistant."}]
+    system_prompt = (
+        "You are ConceptFlow AI, a premium intellectual partner. Focus on providing high-signal, "
+        "structured, and deeply insightful answers. Use Markdown for clarity, and always aim for "
+        "depth and conceptual understanding."
+    )
+    if mode == "cs":
+        system_prompt = (
+            "You are ConceptFlow AI — a world-class Computer Science Architect and Educator. "
+            "Master complex technical concepts through first-principles thinking, intuitive analogies, "
+            "and deep-dive technical analysis. For DSA, always include time/space complexity. "
+            "For System Design, focus on trade-offs. Use clear Markdown headings and tables for comparisons."
+        )
+    
+    messages = [{"role": "system", "content": system_prompt}]
     for msg in history:
         messages.append({"role": msg["role"], "content": msg["content"]})
     messages.append({"role": "user", "content": prompt})
